@@ -25,11 +25,11 @@ class Node():
         self.reward = 0.0
         self.max_reward = 0.0
 
-    # def addChild(self):
-    #     raise NotImplementedError("Please Implement this method")
-    
-    # def getChildren(self):
-    #     raise NotImplementedError("Please Implement this method")
+    def addChild(self):
+        raise NotImplementedError("Please Implement this method")
+
+    def getChildren(self):
+        raise NotImplementedError("Please Implement this method")
 
 
 # Stateful action node
