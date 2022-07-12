@@ -18,9 +18,37 @@ class StatefulSolver():
             return node
 
         current_node = node
-        return node
+        self.simulateActions(node)
+
+        while True:
+            if self.mdp.isTerminal(self.current_node.state):
+                return self.current_node
+            
+            current_children = self.current_node.getChildren()
+            explored_actions = [x.inducingAction for x in current_children]
+
+            if len(list(set(self.current_node.valid_actions) - set(explored_actions))) > 0:
+                return self.current_node
+
+            self.current_node = np.max([self.calculateUCT(a) for a in current_children]) # throw null
+
+            self.simulateActions(self.current_node)
+    
     
     def expand(self, node):
+        if self.mdp.isTerminal(node.state):
+            return node
+        
+        inducing_actions = [n.get_children() for n in node.get_children()]
+        unexplored_actions = [c.inducing_actions for c in list(set(node.valid_actions) - set(inducing_actions))]
+
+        ind = np.random.choice(len(unexplored_actions), 1, replace = False)
+        action_taken = unexplored_actions[ind]
+
+        new_node = ActionNode(node, action_taken)
+        node.addChild(new_node)
+        self.simulateActions(new_node)
+
         return node
     
     def simulate(self, node):
