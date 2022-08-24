@@ -6,10 +6,16 @@ class StatefulSolver():
     def __init__(self, 
         mdp,
         value = 0.0,
-        root_node = StateNode(parent = None, inducingAction = None)):
+        root_node = StateNode(parent = None, inducingAction = None),
+        discount_factor = 1.0,
+        simulation_depth_limit = 200,
+        verbose = False):
 
         self.value = value
         self.mdp = mdp
+        self.discount_factor = discount_factor
+        self.simulation_depth_limit = simulation_depth_limit
+        self.verbose = verbose
 
     
     def select(self, node: ActionNode):
@@ -52,10 +58,50 @@ class StatefulSolver():
         return node
     
     def simulate(self, node):
+        print("Run simulation")
+
+        if self.mdp.isTerminal(node.state):
+            print("Terminal state reached!")
+            return self.mdp.reward(node.parent.state, node.inducingAction, node.state)
+
+        depth = 0
+        current_state = node.state
+        discount = self.discount_factor
+
+        while True:
+            valid_actions = self.mdp.actions(current_state)
+            random_action = np.random.choice(valid_actions, 1)
+            new_state = self.mdp.transition(current_state, random_action)
+
+            if self.mdp.isTerminal(new_state):
+                reward = self.mdp.reward(current_state, random_action, new_state) * discount
+                return reward
+            
+            current_state = new_state
+            depth += 1
+            discount *= self.discount_factor
+
+            if depth > self.simulation_depth_limit:
+                reward = self.mdp.reward(current_state, random_action, new_state) * discount
+                if self.verbose:
+                    print("-> Depth limit reached: " + str(reward))
+                
+                return reward
         return 1.0
     
-    def backpropagate(self, iters):
-        return True
+    def backpropagate(self, node, reward):
+        current_state_node = node
+        current_reward = reward
+        
+        while True:
+            current_state_node.max_reward = max([current_reward, current_state_node.max_reward])
+            current_state_node.reward = current_reward
+            current_state_node.n += 1
+
+            ####
+
+
+        # return True
     
     # Utilities
     def simulateActions(self, node: ActionNode):
