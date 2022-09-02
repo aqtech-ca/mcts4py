@@ -1,17 +1,77 @@
 from NodeClasses import *
+from abc import ABC, abstractmethod, property
+import numpy as np
+
+# Solver abstract class
+class Solver():
+    def __init__(self, exploration_constant, verbose = False):
+        self.exploration_constant = exploration_constant
+        self.verbose = verbose
+
+    @property
+    def root(self):
+        raise NotImplementedError("Please Implement root")
+    
+    @abstractmethod
+    def select(self):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def expand(self):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def simulate(self):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def backpropagate(self):
+        raise NotImplementedError
+    
+    def runTreeSearch(self, iters: int):
+        for i in iters:
+            if self.verbose:
+                print("New iteration: " + str(i))
+                print("=======================")
+            self.runtTreeSearchIteration()
+    
+    def runtTreeSearchIteration(self):
+        best = self.select(self.root)
+
+        if self.verbose:
+            print("Expanding")
+            self.displayNode(best)
+        
+        expanded = self.expand(best)
+        simulated_reward = self.simulate(expanded)
+
+        print("simulated reward: " + str(simulated_reward))
+
+        self.backpropagate(expanded, simulated_reward)
+    
+    def calculateUCT(self, node):
+        parentN = node.parent.n if node.parent != None else node.n
+        return self.calculateUCTLongForm(parentN, node.n, node.reward, self.exploration_constant)
+    
+    def calculateUCTLongForm(parentN, n, reward, exploration_constant):
+        return reward/n + exploration_constant * np.sqrt(np.log(parentN )/n)
+
+
+
+
+    
+
+
 
 # just implement the stateful solver
-
 class StatefulSolver():
     def __init__(self, 
         mdp,
-        value = 0.0,
-        root_node = StateNode(parent = None, inducingAction = None),
+        # root_node = StateNode(parent = None, inducingAction = None),
         discount_factor = 1.0,
         simulation_depth_limit = 200,
         verbose = False):
 
-        self.value = value
         self.mdp = mdp
         self.discount_factor = discount_factor
         self.simulation_depth_limit = simulation_depth_limit

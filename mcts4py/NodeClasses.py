@@ -29,13 +29,11 @@ class Node():
 
     @abstractmethod
     def addChild(self):
-        # pass
-        raise NotImplementedError("Please Implement this method")
+        raise NotImplementedError("Please Implement addChild method")
 
     @abstractmethod
     def getChildren(self):
-        # pass
-        raise NotImplementedError("Please Implement this method")
+        raise NotImplementedError("Please Implement getChildren method")
 
 # Stateful action node
 class ActionNode(Node):
@@ -43,7 +41,7 @@ class ActionNode(Node):
         value,
         parent = None,
         children = []):
-
+        
         self.value = value
         self.parent = parent
         self.children = children
@@ -62,19 +60,18 @@ class ActionNode(Node):
         return 'Action: {}, Max Reward: {}'.format(str(self.inducing_action), str(self.max_reward)) 
 
 # Stateful state node
-# class StateNode(Node):
+class StateNode(Node):
 
     def __init__(self, 
-        value,
         state,
         inducing_action = None,
         valid_actions = [],
         is_terminal = False):
 
-        self.value = value
         self.inducing_action = inducing_action
         self.children = valid_actions
         self.state = state
+        self.is_terminal = is_terminal
 
     def addChild(self, child):
         if child.inducing_action == None:
@@ -85,13 +82,12 @@ class ActionNode(Node):
 
     def getChildren(self, action):
         if action == None:
-            return self.children.values()
+            return self.children.values() # return states
         else:
-            child = self.children[action]
-            if child == None:
-                return []
+            if action in self.children:
+                return [self.children[action]] # returns a [state]
             else:
-                return [child]
+                return []
     
     def exploredActions(self):
         return self.children.keys()
