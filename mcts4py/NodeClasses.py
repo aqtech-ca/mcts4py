@@ -2,6 +2,7 @@ from enum import Enum
 # from Node import *
 import numpy as np
 from abc import ABC, abstractmethod
+from typing import TypeVar, Generic
 
 
 # Sample Enum definition,
@@ -11,6 +12,9 @@ from abc import ABC, abstractmethod
 #     SUPPLIER_ON = 2
 #     SUPPLIER_OFF = 3
 #     NO_EVENT = 4
+
+ActionType = TypeVar('ActionType')
+StateType = TypeVar('StateType')
 
 class Node():
     

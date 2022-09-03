@@ -7,22 +7,22 @@ class MDP(ABC):
         pass
 
     @abstractmethod
-    def transition(self):
+    def transition(self, state, action): # return a state
         pass
 
     @abstractmethod
-    def reward(self):
+    def reward(self, previous_state, action, state) -> float:
         pass
 
     @abstractmethod
-    def initialState(self):
+    def initialState(self): # return a state
         pass
     
     @abstractmethod
-    def actions(self):
-        pass
+    def actions(self, state) -> bool:
+        raise NotImplementedError
 
     @abstractmethod
-    def isTerminal(self):
+    def isTerminal(self, state) -> iter:
         pass
 
