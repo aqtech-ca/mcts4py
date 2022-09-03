@@ -12,7 +12,8 @@ class Solver():
 
     @abstractmethod
     def root(self):
-        raise NotImplementedError("Please Implement root")
+        return 
+        # raise NotImplementedError("Please Implement root")
     
     @abstractmethod
     def select(self):

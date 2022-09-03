@@ -64,13 +64,23 @@ class ActionNode(Node):
         return 'Action: {}, Max Reward: {}'.format(str(self.inducing_action), str(self.max_reward)) 
 
 # Stateful state node
-class StateNode(Node):
+class StateNode():
 
-    def __init__(self, 
-        state,
+    def __init__(self,
+        parent = None,
         inducing_action = None,
+        state = None,
         valid_actions = [],
         is_terminal = False):
+
+        self.parent = parent
+        self.inducing_action = inducing_action
+
+        self.depth = 0 if parent == None else parent.depth + 1
+
+        self.n = 0
+        self.reward = 0.0
+        self.max_reward = 0.0
 
         self.inducing_action = inducing_action
         self.children = valid_actions

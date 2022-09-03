@@ -3,6 +3,7 @@ from mcts4py.Solver import *
 
 # just implement the stateful solver
 class StatefulSolver(Solver):
+
     def __init__(self, 
         mdp,
         discount_factor = 1.0,
@@ -13,10 +14,12 @@ class StatefulSolver(Solver):
         self.discount_factor = discount_factor
         self.simulation_depth_limit = simulation_depth_limit
         self.verbose = verbose
+        self.root_node = self.createNode(None, None, mdp.initialState())
 
+    def root(self):
+        return self.root_node
     
     def select(self, node: ActionNode):
-
         if len(node.getChildren()) == 0:
             return node
 
@@ -118,3 +121,13 @@ class StatefulSolver(Solver):
         node.valid_actions = self.mdp.actions(state)
 
         return True
+    
+    def createNode(self, parent, inducing_action, state): # return state node
+        valid_actions = self.mdp.actions(state)
+        is_terminal = self.mdp.isTerminal(state)
+        state_node = StateNode(parent = parent, inducing_action = inducing_action, state = state, valid_actions = valid_actions, is_terminal = is_terminal)
+
+        parent.addChild(state_node) # parent?.addChild(stateNode) kotlin version
+
+        return state_node
+
