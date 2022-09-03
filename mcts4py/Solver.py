@@ -1,6 +1,8 @@
 from NodeClasses import *
 from abc import ABC, abstractmethod, property
 import numpy as np
+from operator import attrgetter
+import typing
 
 # Solver abstract class
 class Solver():
@@ -57,11 +59,46 @@ class Solver():
         return reward/n + exploration_constant * np.sqrt(np.log(parentN )/n)
 
 
+    def extractOptinalAction(self):
+        if self.root().getChildren() != None:
+            max_c = max(self.root().getChildren(), key=attrgetter('n'))
+            return max_c
+        else:
+            return None
 
-
+    def displayNode(self, node):
+        if node.parent != None:
+            self.displayNode(node.parent)
+        
+        if node.depth > 0:
+            print(" " * (node.depth - 1)*2 + " └")
+        
+        print(str(node))
     
+    def displayTree(self, depth_limit: int = 3):
+        self.displayTreeLongForm(depth_limit, self.root(), "")
+    
+    def displayTreeLongForm(self, depth_limit: int, node: typing.Union[Node, None], indent: str):
+        if node == None:
+            return None
+        
+        if node.depth > depth_limit:
+            return None
 
+        line = str(indent) + str(node) + 'n: {}, reward: {}, UCT: {}'.format(str(node.n), str(node.reward), str(self.calculateUCT(node)) ) 
+        print(line)
 
+        children = node.getChildren()
+
+        if None in children:
+            return None
+        
+        for child in children[:-1]:
+            self.displayTreeLongForm(depth_limit, child, self.generateIndent() + " ├")
+        self.displayTreeLongForm(depth_limit, children[-1], self.generateIndent() + " └")
+
+    def generateIndent(self, indent: str):
+        return indent.replace('├', '│').replace('└', ' ')
 
 # just implement the stateful solver
 class StatefulSolver():
