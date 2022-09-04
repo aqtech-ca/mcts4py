@@ -83,7 +83,7 @@ class StateNode():
         self.max_reward = 0.0
 
         self.inducing_action = inducing_action
-        self.children = valid_actions
+        self.children = dict()
         self.state = state
         self.is_terminal = is_terminal
 

@@ -57,7 +57,7 @@ class Solver():
         parentN = node.parent.n if node.parent != None else node.n
         return self.calculateUCTLongForm(parentN, node.n, node.reward, self.exploration_constant)
     
-    def calculateUCTLongForm(parentN, n, reward, exploration_constant):
+    def calculateUCTLongForm(self, parentN, n, reward, exploration_constant):
         return reward/n + exploration_constant * np.sqrt(np.log(parentN )/n)
 
 
@@ -90,14 +90,16 @@ class Solver():
         line = str(indent) + str(node) + 'n: {}, reward: {}, UCT: {}'.format(str(node.n), str(node.reward), str(self.calculateUCT(node)) ) 
         print(line)
 
-        children = node.getChildren()
+        children = node.getChildren(None)
 
         if None in children:
             return None
         
-        for child in children[:-1]:
+        child_states = list(children)
+        for child in child_states[:-1]:
             self.displayTreeLongForm(depth_limit, child, self.generateIndent() + " ├")
-        self.displayTreeLongForm(depth_limit, children[-1], self.generateIndent() + " └")
+        if len(child_states) > 1:
+            self.displayTreeLongForm(depth_limit, child_states[-1], self.generateIndent() + " └")
 
     def generateIndent(self, indent: str):
         return indent.replace('├', '│').replace('└', ' ')

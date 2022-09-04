@@ -8,13 +8,15 @@ class StatefulSolver(Solver):
         mdp,
         discount_factor = 1.0,
         simulation_depth_limit = 200,
-        verbose = False):
+        verbose = False,
+        exploration_constant = 0.9):
 
         self.mdp = mdp
         self.discount_factor = discount_factor
         self.simulation_depth_limit = simulation_depth_limit
         self.verbose = verbose
         self.root_node = self.createNode(None, None, mdp.initialState())
+        self.exploration_constant = exploration_constant
 
     def root(self):
         return self.root_node
@@ -30,11 +32,12 @@ class StatefulSolver(Solver):
             if self.mdp.isTerminal(current_node.state):
                 return current_node
             
-            current_children = self.current_node.getChildren()
+            current_children = current_node.getChildren(None)
             explored_actions = [x.inducingAction for x in current_children]
 
-            if len(list(set(self.current_node.valid_actions) - set(explored_actions))) > 0:
-                return self.current_node
+            valid_actions = self.mdp.actions(current_node.state)
+            if len(list(set(valid_actions) - set(explored_actions))) > 0:
+                return current_node
 
             self.current_node = np.max([self.calculateUCT(a) for a in current_children]) # throw null
 
@@ -45,10 +48,11 @@ class StatefulSolver(Solver):
         if self.mdp.isTerminal(node.state):
             return node
         
-        inducing_actions = [n.get_children() for n in node.get_children()]
-        unexplored_actions = [c.inducing_actions for c in list(set(node.valid_actions) - set(inducing_actions))]
+        valid_actions = self.mdp.actions(node.state)
+        inducing_actions = [x.getChildren(None) for x in node.getChildren(None)]
+        unexplored_actions = list(set(set(valid_actions) - set(inducing_actions)))
 
-        ind = np.random.choice(len(unexplored_actions), 1, replace = False)
+        ind = np.random.choice(len(unexplored_actions), 1, replace = False)[0]
         action_taken = unexplored_actions[ind]
 
         new_node = ActionNode(node, action_taken)
