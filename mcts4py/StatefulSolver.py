@@ -20,15 +20,15 @@ class StatefulSolver(Solver):
         return self.root_node
     
     def select(self, node: ActionNode):
-        if len(node.getChildren()) == 0:
-            return node
+        # if len(node.getChildren()) == 0:
+        #     return node
 
         current_node = node
-        self.simulateActions(node)
+        # self.simulateActions(node)
 
         while True:
-            if self.mdp.isTerminal(self.current_node.state):
-                return self.current_node
+            if self.mdp.isTerminal(current_node.state):
+                return current_node
             
             current_children = self.current_node.getChildren()
             explored_actions = [x.inducingAction for x in current_children]
@@ -62,7 +62,8 @@ class StatefulSolver(Solver):
 
         if self.mdp.isTerminal(node.state):
             print("Terminal state reached!")
-            return self.mdp.reward(node.parent.state, node.inducingAction, node.state)
+            parent_state = node.parent.state if node.parent != None else None
+            return self.mdp.reward(parent_state, node.inducing_action, node.state)
 
         depth = 0
         current_state = node.state
@@ -98,8 +99,11 @@ class StatefulSolver(Solver):
             current_state_node.reward = current_reward
             current_state_node.n += 1
 
-            ####
-
+            if current_state_node.parent != None:
+                current_state_node = current_state_node.parent
+                current_reward *= self.discount_factor
+            else:
+                break
 
         # return True
     
@@ -127,7 +131,8 @@ class StatefulSolver(Solver):
         is_terminal = self.mdp.isTerminal(state)
         state_node = StateNode(parent = parent, inducing_action = inducing_action, state = state, valid_actions = valid_actions, is_terminal = is_terminal)
 
-        parent.addChild(state_node) # parent?.addChild(stateNode) kotlin version
+        if parent != None:
+            parent.addChild(state_node) # parent?.addChild(stateNode) kotlin version
 
         return state_node
 
