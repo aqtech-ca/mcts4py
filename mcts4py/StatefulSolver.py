@@ -55,11 +55,9 @@ class StatefulSolver(Solver):
         ind = np.random.choice(len(unexplored_actions), 1, replace = False)[0]
         action_taken = unexplored_actions[ind]
 
-        new_node = ActionNode(node, action_taken)
-        node.addChild(new_node)
-        self.simulateActions(new_node)
-
-        return node
+        new_state = self.mdp.transition(node.state, action_taken)
+        new_node = self.createNode(node, action_taken, new_state)
+        return new_node
     
     def simulate(self, node):
         print("Run simulation")

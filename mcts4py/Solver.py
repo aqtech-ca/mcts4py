@@ -87,7 +87,7 @@ class Solver():
         if node.depth > depth_limit:
             return None
 
-        line = str(indent) + str(node) + 'n: {}, reward: {}, UCT: {}'.format(str(node.n), str(node.reward), str(self.calculateUCT(node)) ) 
+        line = "\n" + str(indent) + str(node) + 'n: {}, reward: {}, UCT: {}'.format(str(node.n), str(node.reward), str(self.calculateUCT(node)) ) 
         print(line)
 
         children = node.getChildren(None)
