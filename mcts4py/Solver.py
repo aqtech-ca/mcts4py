@@ -39,7 +39,7 @@ class Solver():
             self.runtTreeSearchIteration()
     
     def runtTreeSearchIteration(self):
-        self.mdp.reset()
+        self.mdp.reset() # no reset in the kotlin version
         root_node = self.root()
         best = self.select(root_node)
 
