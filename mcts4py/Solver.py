@@ -88,7 +88,7 @@ class Solver():
         if node.depth > depth_limit:
             return None
 
-        line = "\n" + str(indent) + str(node) + 'n: {}, reward: {}, UCT: {}'.format(str(node.n), str(node.reward), str(self.calculateUCT(node)) ) 
+        line = str(indent) + str(node) + 'n: {}, reward: {}, UCT: {}'.format(str(node.n), str(node.reward), str(self.calculateUCT(node)) ) 
         print(line)
 
         children = node.getChildren(None)
@@ -98,9 +98,10 @@ class Solver():
         
         child_states = list(children)
         for child in child_states[:-1]:
-            self.displayTreeLongForm(depth_limit, child, self.generateIndent() + " ├")
+            indent = self.generateIndent(indent) + " ├"
+            self.displayTreeLongForm(depth_limit, child, indent)
         if len(child_states) > 1:
-            self.displayTreeLongForm(depth_limit, child_states[-1], self.generateIndent() + " └")
+            self.displayTreeLongForm(depth_limit, child_states[-1], self.generateIndent(indent) + " └")
 
     def generateIndent(self, indent: str):
         return indent.replace('├', '│').replace('└', ' ')
