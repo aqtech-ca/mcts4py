@@ -107,7 +107,7 @@ class StateNode():
         return self.children.keys()
     
     def __str__(self):
-        return 'State: {}, Max Reward: {}'.format(str(self.state), str(self.max_reward)) 
+        return 'State: {}, Max Reward: {} \n'.format(str(self.state), str(self.max_reward)) 
     
     # fun exploredActions(): Collection<ActionType> {
     #     return children.keys

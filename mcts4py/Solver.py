@@ -39,6 +39,7 @@ class Solver():
             self.runtTreeSearchIteration()
     
     def runtTreeSearchIteration(self):
+        self.mdp.reset()
         root_node = self.root()
         best = self.select(root_node)
 

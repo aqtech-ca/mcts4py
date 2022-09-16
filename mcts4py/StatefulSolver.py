@@ -33,13 +33,14 @@ class StatefulSolver(Solver):
                 return current_node
             
             current_children = current_node.getChildren(None)
-            explored_actions = [x.inducingAction for x in current_children]
+            explored_actions = [x.inducing_action for x in current_children]
 
             valid_actions = self.mdp.actions(current_node.state)
             if len(list(set(valid_actions) - set(explored_actions))) > 0:
                 return current_node
 
-            self.current_node = np.max([self.calculateUCT(a) for a in current_children]) # throw null
+            max_ind = np.argmax([self.calculateUCT(a) for a in current_children]) 
+            self.current_node = list(current_children)[max_ind] # throw null
 
             self.simulateActions(self.current_node)
     
@@ -120,7 +121,7 @@ class StatefulSolver(Solver):
             return True
         
         parent_state = parent.state
-        parent_action = node.inducingAction() if node.inducingAction() != None else None
+        parent_action = node.inducing_action if node.inducing_action != None else None
 
         state = self.mdp.transition(parent_state, parent_action)
         node.state = state
