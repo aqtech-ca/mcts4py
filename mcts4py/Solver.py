@@ -39,7 +39,7 @@ class Solver():
             self.runtTreeSearchIteration()
     
     def runtTreeSearchIteration(self):
-        self.mdp.reset() # no reset in the kotlin version
+        # self.mdp.reset() # no reset in the kotlin version
         root_node = self.root()
         best = self.select(root_node)
 
@@ -62,10 +62,12 @@ class Solver():
         return reward/n + exploration_constant * np.sqrt(np.log(parentN )/n)
 
 
-    def extractOptinalAction(self):
-        if self.root().getChildren() != None:
-            max_c = max(self.root().getChildren(), key=attrgetter('n'))
-            return max_c
+    def extractOptimalAction(self):
+        if self.root().getChildren(None) != None:
+            visit_counts = [x.n for x in self.root().getChildren(None)]
+            max_i = np.argmax(visit_counts) # max(self.root().getChildren(), key=attrgetter('n'))
+            inducing_actions = [x.inducing_action for x in self.root().getChildren(None)]
+            return inducing_actions[max_i]
         else:
             return None
 

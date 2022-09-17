@@ -40,9 +40,9 @@ class StatefulSolver(Solver):
                 return current_node
 
             max_ind = np.argmax([self.calculateUCT(a) for a in current_children]) 
-            self.current_node = list(current_children)[max_ind] # throw null
+            current_node = list(current_children)[max_ind] # throw null
 
-            self.simulateActions(self.current_node)
+            # self.simulateActions(self.current_node)
     
     
     def expand(self, node):
