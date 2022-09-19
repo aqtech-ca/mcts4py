@@ -73,9 +73,19 @@ class StatefulSolver(Solver):
         discount = self.discount_factor
 
         while True:
+            #### HACKY ISSUE ####
+            if current_state is None:
+                break
+
             valid_actions = self.mdp.actions(current_state)
-            random_action = np.random.choice(valid_actions, 1)
-            new_state = self.mdp.transition(current_state, random_action)
+            random_action = np.random.choice(valid_actions, 1)[0]
+
+            #### HACKY FIX ####
+            temp_state = self.mdp.transition(current_state, random_action)
+            while temp_state is None:
+                temp_state = self.mdp.transition(current_state, random_action)
+            new_state = temp_state
+            # new_state = self.mdp.transition(current_state, random_action)
 
             if self.mdp.isTerminal(new_state):
                 reward = self.mdp.reward(current_state, random_action, new_state) * discount
