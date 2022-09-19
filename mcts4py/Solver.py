@@ -87,22 +87,16 @@ class Solver():
     
     def displayTreeLongForm(self, depth_limit: int, node: typing.Union[Node, None], indent: str):
 
+        line = str(indent) + str(node.state) + 'n: {}, reward: {}, UCT: {}'.format(str(node.n), str(node.reward), str(self.calculateUCT(node))) 
+        print(line)
+
         if node == None:
             return 
         
         if node.depth > depth_limit:
             return None
-
-        line = str(indent) + str(node.state) + 'n: {}, reward: {}, UCT: {}'.format(str(node.n), str(node.reward), str(self.calculateUCT(node))) 
-        print(line)
-
+        
         children = node.getChildren(None)
-
-        # cc = list(children)
-
-        # if cc == []:
-        #     print("hehe")
-
         if None in children:
             return 
         
