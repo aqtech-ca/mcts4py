@@ -44,6 +44,9 @@ class GridworldState():
                 return None
             else:
                 return GridworldState(self.x - 1, self.y, False)
+    
+    def __str__(self):
+        return "[" + str(self.x) + ", " + str(self.y) + "]"
 
 
 class GridworldReward():
@@ -133,7 +136,6 @@ class GridworldMDP(MDP):
 
     def actions(self, state):        
         return [a for a in self.all_actions if state is not None and state.isNeighbourValid(a, self.x_size, self.y_size)]
-
 
 
 

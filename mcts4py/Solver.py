@@ -46,6 +46,9 @@ class Solver():
         if self.verbose:
             print("Expanding")
             self.displayNode(best)
+
+        if best.state is None:
+            print("hehe")
         
         expanded = self.expand(best)
         simulated_reward = self.simulate(expanded)
@@ -60,8 +63,7 @@ class Solver():
     
     def calculateUCTLongForm(self, parentN, n, reward, exploration_constant):
         return reward/n + exploration_constant * np.sqrt(np.log(parentN )/n)
-
-
+    
     def extractOptimalAction(self):
         if self.root().getChildren(None) != None:
             visit_counts = [x.n for x in self.root().getChildren(None)]
@@ -84,26 +86,37 @@ class Solver():
         self.displayTreeLongForm(depth_limit, self.root(), "")
     
     def displayTreeLongForm(self, depth_limit: int, node: typing.Union[Node, None], indent: str):
+
         if node == None:
-            return None
+            return 
         
         if node.depth > depth_limit:
             return None
 
-        line = str(indent) + str(node) + 'n: {}, reward: {}, UCT: {}'.format(str(node.n), str(node.reward), str(self.calculateUCT(node)) ) 
+        line = str(indent) + str(node.state) + 'n: {}, reward: {}, UCT: {}'.format(str(node.n), str(node.reward), str(self.calculateUCT(node))) 
         print(line)
 
         children = node.getChildren(None)
 
+        # cc = list(children)
+
+        # if cc == []:
+        #     print("hehe")
+
         if None in children:
-            return None
+            return 
         
         child_states = list(children)
+
+        ccc = child_states[:-1]
         for child in child_states[:-1]:
             indent = self.generateIndent(indent) + " ├"
             self.displayTreeLongForm(depth_limit, child, indent)
-        if len(child_states) > 1:
-            self.displayTreeLongForm(depth_limit, child_states[-1], self.generateIndent(indent) + " └")
+        
+        self.displayTreeLongForm(depth_limit, child_states[-1], self.generateIndent(indent) + " └")
+
+        # if len(child_states) > 1:
+        #     self.displayTreeLongForm(depth_limit, child_states[-1], self.generateIndent(indent) + " └")
 
     def generateIndent(self, indent: str):
         return indent.replace('├', '│').replace('└', ' ')

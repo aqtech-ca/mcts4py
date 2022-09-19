@@ -1,5 +1,6 @@
 from mcts4py.NodeClasses import *
 from mcts4py.Solver import *
+import random
 
 # just implement the stateful solver
 class StatefulSolver(Solver):
@@ -39,8 +40,16 @@ class StatefulSolver(Solver):
             if len(list(set(valid_actions) - set(explored_actions))) > 0:
                 return current_node
 
-            max_ind = np.argmax([self.calculateUCT(a) for a in current_children]) 
-            current_node = list(current_children)[max_ind] # throw null
+            current_children_list = list(current_children)
+
+            # if np.random.uniform() < 0.7:      
+            #     return random.choice(current_children_list)
+
+            if len(current_children) > 1:
+                max_ind = np.argmax([self.calculateUCT(a) for a in current_children]) 
+                current_node = current_children_list[max_ind] # throw null
+            else:
+                return current_node
 
             # self.simulateActions(self.current_node)
     
