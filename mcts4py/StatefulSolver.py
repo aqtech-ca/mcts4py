@@ -7,10 +7,10 @@ class StatefulSolver(Solver):
 
     def __init__(self, 
         mdp,
-        discount_factor = 1.0,
-        simulation_depth_limit = 200,
+        discount_factor = 0.9,
+        simulation_depth_limit = 50,
         verbose = False,
-        exploration_constant = 0.9):
+        exploration_constant = 0.4):
 
         self.mdp = mdp
         self.discount_factor = discount_factor
@@ -59,8 +59,11 @@ class StatefulSolver(Solver):
             return node
         
         valid_actions = self.mdp.actions(node.state)
-        inducing_actions = [x.getChildren(None) for x in node.getChildren(None)]
+        inducing_actions = [x.inducing_action for x in node.getChildren(None)]
         unexplored_actions = list(set(set(valid_actions) - set(inducing_actions)))
+
+        if len(unexplored_actions) < 1:
+            return None
 
         ind = np.random.choice(len(unexplored_actions), 1, replace = False)[0]
         action_taken = unexplored_actions[ind]
@@ -72,10 +75,17 @@ class StatefulSolver(Solver):
     def simulate(self, node):
         print("Run simulation")
 
+        if node is None:
+            return None
+
+
         if self.mdp.isTerminal(node.state):
             print("Terminal state reached!")
             parent_state = node.parent.state if node.parent != None else None
-            return self.mdp.reward(parent_state, node.inducing_action, node.state)
+            if parent_state is not None:
+                return self.mdp.reward(parent_state, node.inducing_action, node.state)
+            else:
+                return 0.0
 
         depth = 0
         current_state = node.state
@@ -89,12 +99,17 @@ class StatefulSolver(Solver):
             valid_actions = self.mdp.actions(current_state)
             random_action = np.random.choice(valid_actions, 1)[0]
 
-            #### HACKY FIX ####
-            temp_state = self.mdp.transition(current_state, random_action)
-            while temp_state is None:
-                temp_state = self.mdp.transition(current_state, random_action)
-            new_state = temp_state
-            # new_state = self.mdp.transition(current_state, random_action)
+            # #### HACKY FIX ####
+            # temp_state = self.mdp.transition(current_state, random_action)
+            # while temp_state is None:
+            #     temp_state = self.mdp.transition(current_state, random_action)
+            # new_state = temp_state
+
+
+            new_state = self.mdp.transition(current_state, random_action)
+
+            if current_state is None:
+                print("gotha")
 
             if self.mdp.isTerminal(new_state):
                 reward = self.mdp.reward(current_state, random_action, new_state) * discount
@@ -110,13 +125,19 @@ class StatefulSolver(Solver):
                     print("-> Depth limit reached: " + str(reward))
                 
                 return reward
-        return 1.0
+        return 0.0
     
     def backpropagate(self, node, reward):
+
+        if node is None:
+            return None
+
         current_state_node = node
         current_reward = reward
         
         while True:
+            
+
             current_state_node.max_reward = max([current_reward, current_state_node.max_reward])
             current_state_node.reward = current_reward
             current_state_node.n += 1

@@ -47,8 +47,8 @@ class Solver():
             print("Expanding")
             self.displayNode(best)
 
-        if best.state is None:
-            print("hehe")
+        # if best.state is None:
+        #     print("hehe")
         
         expanded = self.expand(best)
         simulated_reward = self.simulate(expanded)
@@ -87,7 +87,7 @@ class Solver():
     
     def displayTreeLongForm(self, depth_limit: int, node: typing.Union[Node, None], indent: str):
 
-        line = str(indent) + str(node.state) + 'n: {}, reward: {}, UCT: {}'.format(str(node.n), str(node.reward), str(self.calculateUCT(node))) 
+        line = str(indent) + str(node.state) + ' > n: {}, reward: {}, UCT: {}'.format(str(node.n), str(node.reward), str(self.calculateUCT(node))) 
         print(line)
 
         if node == None:

@@ -25,25 +25,25 @@ class GridworldState():
     
     def resolveNeighbour(self, action, x_size, y_size):
         if action == "UP":
-            if self.y == y_size - 1:
-                return None
-            else:
-                return GridworldState(self.x, self.y+1, False)
-        if action == "RIGHT":
-            if self.x == x_size - 1:
-                return None
-            else:
-                return GridworldState(self.x + 1, self.y, False)
-        if action == "DOWN":
-            if self.y == 0:
-                return None
-            else:
-                return GridworldState(self.x, self.y - 1, False)
-        if action == "LEFT":
             if self.x == 0:
                 return None
             else:
-                return GridworldState(self.x - 1, self.y, False)
+                return GridworldState(self.x-1, self.y, False)
+        if action == "RIGHT":
+            if self.y == 0:
+                return None
+            else:
+                return GridworldState(self.x, self.y+1, False)
+        if action == "DOWN":
+            if self.x == 0:
+                return None
+            else:
+                return GridworldState(self.x+1, self.y, False)
+        if action == "LEFT":
+            if self.y == 0:
+                return None
+            else:
+                return GridworldState(self.x, self.y-1, False)
     
     def __str__(self):
         return "[" + str(self.x) + ", " + str(self.y) + "]"
@@ -61,7 +61,7 @@ class GridworldMDP(MDP):
         x_size = 4,
         y_size = 5,
         rewards = [GridworldReward(0, 0, 1)],
-        transition_probability = 0.8,
+        transition_probability = 1.0,
         starting_location = (0, 0)):
 
         self.x_size = x_size
@@ -82,16 +82,19 @@ class GridworldMDP(MDP):
                 return True
         return False
     
-    def visualizeState(self):
+    def visualizeState(self, state = None):
+        if state is None:
+            state = self.starting_location
+
         arr = np.zeros([self.x_size, self.y_size], dtype = str)
         state_array = np.full_like(arr, "-")
-        state_array[self.starting_location[0], self.starting_location[1]] = "A"
+        state_array[state.x, state.y] = "A"
 
         for r in self.rewards:
             if r.value > 0:
-                state_array[r.x, r.y] = "*"
+                state_array[r.state.x, r.state.y] = "*"
             if r.value < 0:
-                state_array[r.x, r.y] = "X"
+                state_array[r.state.x, r.state.y] = "X"
 
         print(state_array)
 
