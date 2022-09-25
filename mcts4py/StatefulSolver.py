@@ -8,7 +8,7 @@ class StatefulSolver(Solver):
     def __init__(self, 
         mdp,
         discount_factor = 0.9,
-        simulation_depth_limit = 50,
+        simulation_depth_limit = 5,
         verbose = False,
         exploration_constant = 0.4):
 
@@ -76,8 +76,8 @@ class StatefulSolver(Solver):
         inducing_actions = [x.inducing_action for x in node.getChildren(None)]
         unexplored_actions = list(set(set(valid_actions) - set(inducing_actions)))
 
-        # if len(unexplored_actions) < 1:
-        #     return None
+        if len(unexplored_actions) < 1:
+            return None
 
         ind = np.random.choice(len(unexplored_actions), 1, replace = False)[0]
         action_taken = unexplored_actions[ind]
