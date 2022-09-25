@@ -21,6 +21,20 @@ class StatefulSolver(Solver):
 
     def root(self):
         return self.root_node
+
+    # forcibly expore all actions from root:
+    def initialExploration(self):
+        root_node = self.root()
+        children = root_node.getChildren(None)
+        
+        node = root_node
+
+        for action_taken in self.mdp.actions(root_node.state):
+            new_state = self.mdp.transition(root_node.state, action_taken)
+            new_node = self.createNode(root_node, action_taken, new_state)
+
+            self.backpropagate(new_node, 0.9)
+        return root_node
     
     def select(self, node: ActionNode):
         # if len(node.getChildren()) == 0:
@@ -62,8 +76,8 @@ class StatefulSolver(Solver):
         inducing_actions = [x.inducing_action for x in node.getChildren(None)]
         unexplored_actions = list(set(set(valid_actions) - set(inducing_actions)))
 
-        if len(unexplored_actions) < 1:
-            return None
+        # if len(unexplored_actions) < 1:
+        #     return None
 
         ind = np.random.choice(len(unexplored_actions), 1, replace = False)[0]
         action_taken = unexplored_actions[ind]
@@ -105,11 +119,7 @@ class StatefulSolver(Solver):
             #     temp_state = self.mdp.transition(current_state, random_action)
             # new_state = temp_state
 
-
             new_state = self.mdp.transition(current_state, random_action)
-
-            if current_state is None:
-                print("gotha")
 
             if self.mdp.isTerminal(new_state):
                 reward = self.mdp.reward(current_state, random_action, new_state) * discount
@@ -137,7 +147,6 @@ class StatefulSolver(Solver):
         
         while True:
             
-
             current_state_node.max_reward = max([current_reward, current_state_node.max_reward])
             current_state_node.reward = current_reward
             current_state_node.n += 1

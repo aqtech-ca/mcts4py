@@ -40,6 +40,8 @@ class Solver():
     
     def runtTreeSearchIteration(self):
         # self.mdp.reset() # no reset in the kotlin version
+        # self.initialExploration()
+
         root_node = self.root()
         best = self.select(root_node)
 
@@ -91,10 +93,10 @@ class Solver():
         print(line)
 
         if node == None:
-            return 
-        
-        if node.depth > depth_limit:
             return None
+        
+        # if node.depth > depth_limit:
+        #     return None
         
         children = node.getChildren(None)
         if None in children:
@@ -107,7 +109,8 @@ class Solver():
             indent = self.generateIndent(indent) + " ├"
             self.displayTreeLongForm(depth_limit, child, indent)
         
-        self.displayTreeLongForm(depth_limit, child_states[-1], self.generateIndent(indent) + " └")
+        if len(child_states) > 0:
+            self.displayTreeLongForm(depth_limit, child_states[-1], self.generateIndent(indent) + " └")
 
         # if len(child_states) > 1:
         #     self.displayTreeLongForm(depth_limit, child_states[-1], self.generateIndent(indent) + " └")

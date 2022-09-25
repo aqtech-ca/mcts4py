@@ -102,6 +102,10 @@ class GridworldMDP(MDP):
     
     # state represented as repr([x, y])
     def reward(self, previous_state, action, state):
+
+        if state is None:
+            return 0.0
+
         for r in self.rewards:
             if repr([r.state.x, r.state.y]) == repr([state.x, state.y]):
                 return r.value 
