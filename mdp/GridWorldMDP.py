@@ -61,7 +61,7 @@ class GridworldMDP(MDP):
         x_size = 4,
         y_size = 5,
         rewards = [GridworldReward(0, 0, 1)],
-        transition_probability = 1.0,
+        transition_probability = 0.9,
         starting_location = (0, 0)):
 
         self.x_size = x_size

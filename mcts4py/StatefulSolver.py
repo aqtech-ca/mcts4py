@@ -23,18 +23,18 @@ class StatefulSolver(Solver):
         return self.root_node
 
     # forcibly expore all actions from root:
-    def initialExploration(self):
-        root_node = self.root()
-        children = root_node.getChildren(None)
+    # def initialExploration(self):
+    #     root_node = self.root()
+    #     children = root_node.getChildren(None)
         
-        node = root_node
+    #     node = root_node
 
-        for action_taken in self.mdp.actions(root_node.state):
-            new_state = self.mdp.transition(root_node.state, action_taken)
-            new_node = self.createNode(root_node, action_taken, new_state)
+    #     for action_taken in self.mdp.actions(root_node.state):
+    #         new_state = self.mdp.transition(root_node.state, action_taken)
+    #         new_node = self.createNode(root_node, action_taken, new_state)
 
-            self.backpropagate(new_node, 0.9)
-        return root_node
+    #         self.backpropagate(new_node, 0.9)
+    #     return root_node
     
     def select(self, node: ActionNode):
         # if len(node.getChildren()) == 0:
@@ -45,7 +45,7 @@ class StatefulSolver(Solver):
 
         while True:
             if self.mdp.isTerminal(current_node.state):
-                return current_node
+                return None
             
             current_children = current_node.getChildren(None)
             explored_actions = [x.inducing_action for x in current_children]
