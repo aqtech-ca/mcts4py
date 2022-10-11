@@ -17,8 +17,8 @@ ActionType = TypeVar('ActionType')
 StateType = TypeVar('StateType')
 
 class Node():
-    
-    def __init__(self, 
+
+    def __init__(self,
         parent = None,
         inducing_action = None):
 
@@ -38,30 +38,6 @@ class Node():
     @abstractmethod
     def getChildren(self):
         raise NotImplementedError("Please Implement getChildren method")
-
-# Stateful action node
-class ActionNode(Node):
-    def __init__(self, 
-        value,
-        parent = None,
-        children = []):
-        
-        self.value = value
-        self.parent = parent
-        self.children = children
-
-    def addChild(self, child):
-        self.children.append(child)
-
-    def getChildren(self, action):
-        if action == None:
-            return self.children
-        else:
-            return filter(lambda x: x.inducing_action == action, self.children) 
-        # return filter(lambda x: x.parentState == state, self.children)
-    
-    def __str__(self):
-        return 'Action: {}, Max Reward: {}'.format(str(self.inducing_action), str(self.max_reward)) 
 
 # Stateful state node
 class StateNode():
@@ -102,13 +78,13 @@ class StateNode():
                 return [self.children[action]] # returns a [state]
             else:
                 return []
-    
+
     def exploredActions(self):
         return self.children.keys()
-    
+
     def __str__(self):
-        return 'State: {}, Max Reward: {} '.format(str(self.state), str(self.max_reward)) 
-    
+        return 'State: {}, Max Reward: {} '.format(str(self.state), str(self.max_reward))
+
     # fun exploredActions(): Collection<ActionType> {
     #     return children.keys
     # }
