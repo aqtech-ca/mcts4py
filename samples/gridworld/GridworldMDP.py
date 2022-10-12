@@ -11,7 +11,7 @@ class GridworldState():
         self.x = x
         self.y = y
         self.is_terminal = is_terminal
-    
+
     def isNeighbourValid(self, action, x_size, y_size):
         if action == "UP" and self.y == y_size - 1:
             return False
@@ -22,7 +22,7 @@ class GridworldState():
         if action == "LEFT" and self.x == 0:
             return False
         return True
-    
+
     def resolveNeighbour(self, action, x_size, y_size):
         if action == "UP":
             if self.x == 0:
@@ -44,7 +44,7 @@ class GridworldState():
                 return None
             else:
                 return GridworldState(self.x, self.y-1, False)
-    
+
     def __str__(self):
         return "[" + str(self.x) + ", " + str(self.y) + "]"
 
@@ -57,7 +57,7 @@ class GridworldReward():
 
 class GridworldMDP(MDP):
 
-    def __init__(self, 
+    def __init__(self,
         x_size = 4,
         y_size = 5,
         rewards = [GridworldReward(0, 0, 1)],
@@ -68,20 +68,20 @@ class GridworldMDP(MDP):
         self.y_size = y_size
         self.rewards = rewards
         self.transition_probability = transition_probability
-        self.starting_location = starting_location 
+        self.starting_location = starting_location
 
         self.all_actions = ["UP", "DOWN", "LEFT", "RIGHT"]
 
     def initialState(self):
         return self.starting_location
 
-    
+
     def isTerminal(self, state):
         for r in self.rewards:
             if r.state == state:
                 return True
         return False
-    
+
     def visualizeState(self, state = None):
         if state is None:
             state = self.starting_location
@@ -99,7 +99,7 @@ class GridworldMDP(MDP):
         print(state_array)
 
         return None
-    
+
     # state represented as repr([x, y])
     def reward(self, previous_state, action, state):
 
@@ -108,23 +108,23 @@ class GridworldMDP(MDP):
 
         for r in self.rewards:
             if repr([r.state.x, r.state.y]) == repr([state.x, state.y]):
-                return r.value 
+                return r.value
         return 0.0
-    
+
     def transition(self, state, action):
         if state.is_terminal:
             return state
-        
+
         term_states = [repr([r.state.x, r.state.y]) for r in self.rewards]
         if repr([state.x, state.y]) in term_states:
             return state
-        
+
         # reward states?
 
         target_neighbour = state.resolveNeighbour(action, self.x_size, self.y_size)
         if target_neighbour is None:
             return state
-        
+
         if np.random.uniform() < self.transition_probability:
             return target_neighbour
         else:
@@ -133,15 +133,15 @@ class GridworldMDP(MDP):
             for a in remaining_actions:
                 possible_neighbour = state.resolveNeighbour(a, self.x_size, self.y_size)
                 non_target_neighbours.append(possible_neighbour)
-            
+
             if len(non_target_neighbours) > 0:
                 return random.choice(non_target_neighbours)
             else:
                 raise Exception("No valid neighbours exist")
-        
+
         return state
 
-    def actions(self, state):        
+    def actions(self, state):
         return [a for a in self.all_actions if state is not None and state.isNeighbourValid(a, self.x_size, self.y_size)]
 
 

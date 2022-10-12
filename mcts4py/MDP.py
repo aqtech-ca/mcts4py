@@ -1,28 +1,27 @@
 from abc import ABC, abstractmethod
+from typing import Generic, Optional
 
-class MDP(ABC):
+from mcts4py.Types import TAction, TState
 
-    @abstractmethod
-    def __init__(self):
-        pass
-
-    @abstractmethod
-    def transition(self, state, action): # return a state
-        pass
+class MDP(ABC, Generic[TState, TAction]):
 
     @abstractmethod
-    def reward(self, previous_state, action, state) -> float:
-        pass
-
-    @abstractmethod
-    def initialState(self): # return a state
-        pass
-
-    @abstractmethod
-    def actions(self, state) -> bool:
+    def transition(self, state: TState, action: TAction) -> TState:
         raise NotImplementedError
 
     @abstractmethod
-    def isTerminal(self, state) -> iter:
-        pass
+    def reward(self, previous_state: Optional[TState], action: Optional[TAction], state: TState) -> float:
+        raise NotImplementedError
+
+    @abstractmethod
+    def initial_state(self) -> TState:
+        raise NotImplementedError
+
+    @abstractmethod
+    def actions(self, state: TState) -> list[TAction]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def is_terminal(self, state: TState) -> bool:
+        raise NotImplementedError
 

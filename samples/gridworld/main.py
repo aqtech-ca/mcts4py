@@ -23,9 +23,9 @@ next_state = gwMDP.transition(gwMDP.initialState(), "DOWN")
 # # gwMDP.visualizeState(next_state)
 
 solver = StatefulSolver(gwMDP, verbose = True)
-solver.runTreeSearch(99)
+solver.run_tree_search(99)
 
-solver.displayTree(True)
+solver.display_tree(True)
 # gwMDP.visualizeState(gwMDP.initialState())
 # print(str(solver.extractOptimalAction()))
 
