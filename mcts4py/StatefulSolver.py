@@ -88,7 +88,7 @@ class StatefulSolver(MCTSSolver[TAction, StateNode[TState, TAction]], Generic[TS
             if depth > self.simulation_depth_limit:
                 reward = self.mdp.reward(current_state, random_action, new_state) * discount
                 if self.verbose:
-                    print("-> Depth limit reached: " + str(reward))
+                    print(f"-> Depth limit reached: {reward}")
                 return reward
 
     def update(self, node: StateNode[TState, TAction], reward: float) -> None:
