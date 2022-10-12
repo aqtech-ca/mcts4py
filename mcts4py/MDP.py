@@ -17,7 +17,7 @@ class MDP(ABC):
     @abstractmethod
     def initialState(self): # return a state
         pass
-    
+
     @abstractmethod
     def actions(self, state) -> bool:
         raise NotImplementedError

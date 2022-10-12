@@ -1,6 +1,5 @@
-from mcts4py.NodeClasses import *
+from mcts4py.Types import *
 from mcts4py.Solver import *
-import random
 
 # just implement the stateful solver
 class StatefulSolver(Solver):
