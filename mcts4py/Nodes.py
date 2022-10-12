@@ -78,5 +78,5 @@ class StateNode(Generic[TState, TAction], Node[TAction]):
         return list(self.children.keys())
 
     def __str__(self):
-        return "State: {}, Max Reward: {} ".format(str(self.state), str(self.max_reward))
+        return f"State: {self.state} Inducing Action: {self.inducing_action}"
 

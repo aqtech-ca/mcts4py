@@ -15,7 +15,7 @@ class StatefulSolver(MCTSSolver[TAction, StateNode[TState, TAction]], Generic[TS
         self.mdp = mdp
         self.simulation_depth_limit = simulation_depth_limit
         self.discount_factor = discount_factor
-        self.__root_node = self.create_node(None, None, mdp.initialState())
+        self.__root_node = self.create_node(None, None, mdp.initial_state())
 
         super().__init__(exploration_constant, verbose)
 
@@ -27,7 +27,7 @@ class StatefulSolver(MCTSSolver[TAction, StateNode[TState, TAction]], Generic[TS
 
         while True:
             # If the node is terminal, return it
-            if self.mdp.isTerminal(current_node.state):
+            if self.mdp.is_terminal(current_node.state):
                 return current_node
 
             explored_actions = current_node.explored_actions()
@@ -36,21 +36,21 @@ class StatefulSolver(MCTSSolver[TAction, StateNode[TState, TAction]], Generic[TS
                 return current_node
 
             # This state has been explored, select best action
-            return max(current_node.get_children(), key=lambda c: self.calculate_uct(c))
+            current_node = max(current_node.get_children(), key=lambda c: self.calculate_uct(c))
 
     def expand(self, node: StateNode[TState, TAction]) -> StateNode[TState, TAction]:
         # If the node is terminal, return it
-        if self.mdp.isTerminal(node.state):
+        if self.mdp.is_terminal(node.state):
             return node
 
         explored_actions = node.explored_actions()
-        unexploredActions = [a for a in node.valid_actions if a not in explored_actions]
+        unexplored_actions = [a for a in node.valid_actions if a not in explored_actions]
 
-        if len(unexploredActions) == 0:
+        if len(unexplored_actions) == 0:
             raise RuntimeError("No unexplored actions available")
 
         # Expand an unexplored action
-        action_taken = random.choice(unexploredActions)
+        action_taken = random.choice(unexplored_actions)
 
         new_state = self.mdp.transition(node.state, action_taken)
         return self.create_node(node, action_taken, new_state)
@@ -75,7 +75,7 @@ class StatefulSolver(MCTSSolver[TAction, StateNode[TState, TAction]], Generic[TS
             random_action = random.choice(valid_actions)
             new_state = self.mdp.transition(current_state, random_action)
 
-            if self.mdp.isTerminal(new_state):
+            if self.mdp.is_terminal(new_state):
                 reward = self.mdp.reward(current_state, random_action, new_state) * discount
                 if self.verbose:
                     print(f"-> Terminal state reached: {reward}")
@@ -107,7 +107,7 @@ class StatefulSolver(MCTSSolver[TAction, StateNode[TState, TAction]], Generic[TS
 
     def create_node(self, parent: Optional[StateNode[TState, TAction]], inducing_action: Optional[TAction], state: TState) -> StateNode[TState, TAction]:
         valid_actions = self.mdp.actions(state)
-        is_terminal = self.mdp.isTerminal(state)
+        is_terminal = self.mdp.is_terminal(state)
         state_node = StateNode(parent, inducing_action, state, valid_actions, is_terminal)
 
         if parent != None:

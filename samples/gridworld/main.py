@@ -1,42 +1,31 @@
-from mcts4py.NodeClasses import *
-from mdp.GridWorldMDP import *
 from mcts4py.StatefulSolver import *
+from samples.gridworld.GridworldMDP import *
 
-rewards = [GridworldReward(5, 0, -20), GridworldReward(4, 3, 99.0)]
-x_size = 8
-y_size = 5
-tp = 0.8
+rewards = [GridworldReward(5, 0, -0.5), GridworldReward(4, 3, 0.5)]
+x_size: int = 8
+y_size: int = 5
+transition_probability: float = 1.0
 
-reward_locations = []
+mdp = GridworldMDP(
+    x_size,
+    y_size,
+    rewards,
+    transition_probability,
+    starting_location = GridworldState(6, 2, False))
 
-for r in rewards:
-    reward_locations.append((r.state.x, r.state.y))
+print("Initial state:")
+mdp.visualize_state()
 
-gwMDP = GridworldMDP(x_size, y_size, rewards, tp, GridworldState(6, 2, False))
+solver = StatefulSolver(
+    mdp,
+    simulation_depth_limit = 100,
+    exploration_constant = 1.0,
+    discount_factor = 0.5,
+    verbose = False)
 
-######
+solver.run_search(1000)
 
-
-gwMDP.visualizeState(gwMDP.initialState())
-next_state = gwMDP.transition(gwMDP.initialState(), "DOWN")
-# # print("\n")
-# # gwMDP.visualizeState(next_state)
-
-solver = StatefulSolver(gwMDP, verbose = True)
-solver.run_tree_search(99)
-
-solver.display_tree(True)
-# gwMDP.visualizeState(gwMDP.initialState())
-# print(str(solver.extractOptimalAction()))
-
-# voting_states = []
-# for i in range(15):
-#     solver = StatefulSolver(gwMDP, verbose = False)
-#     solver.runTreeSearch(99)
-#     voting_states.append(str(solver.extractOptimalAction()))
-
-# gwMDP.visualizeState(gwMDP.initialState())
-# print(voting_states)
-# print(max(set(voting_states), key=voting_states.count))
+print("\nSearch Tree:")
+solver.display_tree()
 
 

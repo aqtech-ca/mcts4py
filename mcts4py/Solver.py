@@ -1,7 +1,7 @@
+from math import sqrt, log
 from mcts4py.Types import *
 from mcts4py.Nodes import *
 from abc import ABC, abstractmethod
-import numpy as np
 
 
 class MCTSSolver(ABC, Generic[TAction, TNode]):
@@ -65,10 +65,10 @@ class MCTSSolver(ABC, Generic[TAction, TNode]):
 
     def calculate_uct(self, node: TNode) -> float:
         parentN = node.parent.n if node.parent != None else node.n
-        return MCTSSolver.calculate_uct_impl(parentN, node.n, node.reward, self.exploration_constant)
+        return self.calculate_uct_impl(parentN, node.n, node.reward, self.exploration_constant)
 
-    def calculate_uct_impl(cls, parentN: TNode, n: TNode, reward: float, exploration_constant: float) -> float:
-        return reward/n + exploration_constant * np.sqrt(np.log(parentN)/n)
+    def calculate_uct_impl(self, parentN: TNode, n: TNode, reward: float, exploration_constant: float) -> float:
+        return reward/n + exploration_constant * sqrt(log(parentN)/n)
 
     def extract_optimal_action(self) -> Optional[TAction]:
         return max(self.root().get_children(), key=lambda c: c.n)
@@ -78,9 +78,7 @@ class MCTSSolver(ABC, Generic[TAction, TNode]):
             self.display_node(node.parent)
 
         if node.depth > 0:
-            print("  "*(node.depth - 1) + " └")
-
-        print(str(node))
+            print("  "*(node.depth - 1) + " └ " + str(node))
 
     def display_tree(self, depth_limit: int = 3) -> None:
         self.display_tree_impl(depth_limit, self.root(), "")
@@ -90,7 +88,7 @@ class MCTSSolver(ABC, Generic[TAction, TNode]):
         if node == None or node.depth > depth_limit:
             return
 
-        print(f"{indent} {str(node)} (n: {node.n}, reward: {node.reward:.3f}, UCT: {self.calculate_uct(node):.3f})")
+        print(f"{indent} {str(node)} (n: {node.n}, reward: {node.reward/node.n:.3f}, UCT: {self.calculate_uct(node):.3f})")
 
         children = node.get_children()
 
