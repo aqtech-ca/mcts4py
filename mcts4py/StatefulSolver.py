@@ -91,7 +91,7 @@ class StatefulSolver(MCTSSolver[TAction, StateNode[TState, TAction]], Generic[TS
                     print(f"-> Depth limit reached: {reward}")
                 return reward
 
-    def update(self, node: StateNode[TState, TAction], reward: float) -> None:
+    def backpropagate(self, node: StateNode[TState, TAction], reward: float) -> None:
         current_state_node = node
         current_reward = reward
 

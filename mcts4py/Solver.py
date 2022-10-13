@@ -26,7 +26,7 @@ class MCTSSolver(ABC, Generic[TAction, TNode]):
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, node: TNode, reward: float) -> None:
+    def backpropagate(self, node: TNode, reward: float) -> None:
         raise NotImplementedError
 
     def run_search(self, iterations: int):
@@ -58,8 +58,8 @@ class MCTSSolver(ABC, Generic[TAction, TNode]):
         if self.verbose:
             print(f"Simulated reward: {simulated_reward}")
 
-        # Update
-        self.update(expanded, simulated_reward)
+        # Backpropagation
+        self.backpropagate(expanded, simulated_reward)
 
     # Utilities
 
