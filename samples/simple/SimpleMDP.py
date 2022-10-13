@@ -7,7 +7,7 @@ class SimpleMDP(MDP):
         self.initial_counter = 100
         self.counter = self.initial_counter
         self.initial_state = initial_state
-    
+
     def transition(self, state, action):
         self.counter -= 1
         if action == "1":
@@ -20,7 +20,7 @@ class SimpleMDP(MDP):
                 return "b"
             elif state == "b" and np.random.uniform(0, 1) > 0.5:
                 return "a"
-        
+
         return state
 
     def reward(self, previous_state, action, state):
@@ -42,7 +42,7 @@ class SimpleMDP(MDP):
 
     def initialState(self):
         return self.initial_state
-    
+
     def actions(self, state):
         return ["1", "2"]
 
@@ -56,10 +56,9 @@ class SimpleMDP(MDP):
         #     return True
         # else:
         #     return False
-    
+
     def reset(self):
         self.counter = self.initial_counter
         self.state = self.initialState()
-        
-    
-        
+
+

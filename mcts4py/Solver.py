@@ -1,132 +1,104 @@
-from mcts4py.NodeClasses import *
+from math import sqrt, log
+from mcts4py.Types import *
+from mcts4py.Nodes import *
 from abc import ABC, abstractmethod
-import numpy as np
-from operator import attrgetter
-import typing
 
-# Solver abstract class
-class Solver():
-    def __init__(self, exploration_constant = 0.9, verbose = False):
+
+class MCTSSolver(ABC, Generic[TAction, TNode]):
+    def __init__(self, exploration_constant: float, verbose: bool = False):
         self.exploration_constant = exploration_constant
         self.verbose = verbose
 
     @abstractmethod
-    def root(self):
-        return 
-        # raise NotImplementedError("Please Implement root")
-    
-    @abstractmethod
-    def select(self):
+    def root(self) -> TNode:
         raise NotImplementedError
-    
-    @abstractmethod
-    def expand(self):
-        raise NotImplementedError
-    
-    @abstractmethod
-    def simulate(self):
-        raise NotImplementedError
-    
-    @abstractmethod
-    def backpropagate(self):
-        raise NotImplementedError
-    
-    def runTreeSearch(self, iters: int):
-        for i in range(iters):
-            if self.verbose:
-                print("New iteration: " + str(i))
-                print("=======================")
-            self.runtTreeSearchIteration()
-    
-    def runtTreeSearchIteration(self):
-        # self.mdp.reset() # no reset in the kotlin version
-        # self.initialExploration()
 
+    @abstractmethod
+    def select(self, node: TNode) -> TNode:
+        raise NotImplementedError
+
+    @abstractmethod
+    def expand(self, node: TNode) -> TNode:
+        raise NotImplementedError
+
+    @abstractmethod
+    def simulate(self, node: TNode) -> float:
+        raise NotImplementedError
+
+    @abstractmethod
+    def backpropagate(self, node: TNode, reward: float) -> None:
+        raise NotImplementedError
+
+    def run_search(self, iterations: int):
+        for i in range(iterations):
+            if self.verbose:
+                print(f"\nNew iteration: {i}")
+                print("=======================")
+            self.run_search_iteration()
+
+    def run_search_iteration(self):
+        # Selection
         root_node = self.root()
         best = self.select(root_node)
 
-        if best is not None:
-            if self.verbose:
-                print("Expanding")
-                self.displayNode(best)
+        if self.verbose:
+            print("Selected:")
+            self.display_node(best)
 
-            # if best.state is None:
-            #     print("hehe")
-            
-            expanded = self.expand(best)
-            simulated_reward = self.simulate(expanded)
+        # Expansion
+        expanded = self.expand(best)
 
-            print("simulated reward: " + str(simulated_reward))
+        if self.verbose:
+            print("Expanded to:")
+            self.display_node(expanded)
 
-            self.backpropagate(expanded, simulated_reward)
-    
-    def calculateUCT(self, node):
+        # Simulation
+        simulated_reward = self.simulate(expanded)
+
+        if self.verbose:
+            print(f"Simulated reward: {simulated_reward}")
+
+        # Backpropagation
+        self.backpropagate(expanded, simulated_reward)
+
+    # Utilities
+
+    def calculate_uct(self, node: TNode) -> float:
         parentN = node.parent.n if node.parent != None else node.n
-        return self.calculateUCTLongForm(parentN, node.n, node.reward, self.exploration_constant)
-    
-    def calculateUCTLongForm(self, parentN, n, reward, exploration_constant):
-        return reward/n + exploration_constant * np.sqrt(np.log(parentN )/n)
-    
-    def extractOptimalAction(self):
-        if self.root().getChildren(None) != None:
-            visit_counts = [x.n for x in self.root().getChildren(None)]
-            max_i = np.argmax(visit_counts) # max(self.root().getChildren(), key=attrgetter('n'))
-            inducing_actions = [x.inducing_action for x in self.root().getChildren(None)]
-            return inducing_actions[max_i]
-        else:
-            return None
+        return self.calculate_uct_impl(parentN, node.n, node.reward, self.exploration_constant)
 
-    def displayNode(self, node):
+    def calculate_uct_impl(self, parentN: TNode, n: TNode, reward: float, exploration_constant: float) -> float:
+        return reward/n + exploration_constant * sqrt(log(parentN)/n)
+
+    def extract_optimal_action(self) -> Optional[TAction]:
+        return max(self.root().get_children(), key=lambda c: c.n)
+
+    def display_node(self, node: TNode) -> None:
         if node.parent != None:
-            self.displayNode(node.parent)
-        
+            self.display_node(node.parent)
+
         if node.depth > 0:
-            print(" " * (node.depth - 1)*2 + " └")
-        
-        print(str(node))
-    
-    def displayTree(self, depth_limit: int = 3):
-        self.displayTreeLongForm(depth_limit, self.root(), "")
-    
-    def displayTreeLongForm(self, depth_limit: int, node: typing.Union[Node, None], indent: str):
+            print("  "*(node.depth - 1) + " └ " + str(node))
 
-        indent_calc = " ├"*(node.depth)
-        line = str(indent_calc) + str(node.state) + ' > n: {}, reward: {}, UCT: {}'.format(str(node.n), str(node.reward), str(self.calculateUCT(node))) 
-        print(line)
+    def display_tree(self, depth_limit: int = 3) -> None:
+        self.display_tree_impl(depth_limit, self.root(), "")
 
-        if node == None:
+    def display_tree_impl(self, depth_limit: int, node: Optional[TNode], indent: str) -> None:
+
+        if node == None or node.depth > depth_limit:
             return
-        
-        # if node.depth > depth_limit:
-        #     return None
-        
-        children = node.getChildren(None)
 
-        if None in children:
-            return 
-        
-        child_states = list(children)
+        print(f"{indent} {str(node)} (n: {node.n}, reward: {node.reward/node.n:.3f}, UCT: {self.calculate_uct(node):.3f})")
 
-        ccc = child_states[:-1]
-        '''
-        
-        for child in child_states[:-1]:
-            indent = self.generateIndent(indent) + " ├"
-            self.displayTreeLongForm(depth_limit, child, indent)
-        
-        if len(child_states) > 0:
-            self.displayTreeLongForm(depth_limit, child_states[-1], self.generateIndent(indent) + " └")
-        '''
+        children = node.get_children()
 
-        for child in child_states:
-            indent = self.generateIndent(indent) + " ├"
-            self.displayTreeLongForm(depth_limit, child, indent)
-        
-        # if len(child_states) > 0:
-        #     self.displayTreeLongForm(depth_limit, child_states[-1], self.generateIndent(indent) + " └")
-    
+        if len(children) == 0:
+            return
 
+        for child in children[:-1]:
+            self.display_tree_impl(depth_limit, child, self.generate_indentation(indent) + " ├")
+        self.display_tree_impl(depth_limit, children[-1], self.generate_indentation(indent) + " └")
 
-    def generateIndent(self, indent: str):
+    def generate_indentation(self, indent: str):
         return indent.replace('├', '│').replace('└', ' ')
 

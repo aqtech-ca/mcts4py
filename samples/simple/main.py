@@ -10,7 +10,7 @@ simpMDP = SimpleMDP(initial_state = "b")
 
 solver = StatefulSolver(simpMDP, verbose = True, exploration_constant = 0.9)
 
-solver.runTreeSearch(99)
-solver.displayTree(True)
+solver.run_tree_search(99)
+solver.display_tree(True)
 
-print(str(solver.extractOptimalAction()))
+print(str(solver.extract_optimal_action()))

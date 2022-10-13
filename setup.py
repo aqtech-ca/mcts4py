@@ -12,7 +12,6 @@ setup(
     author="Larkin Liu",
     author_email="larkin@aqtech.ca",
     description="Python implementation of Monte Carlo Tree Search (MCTS)",
-    classifiers=CLASSIFIERS,
     download_url="",
     license="MIT",
     url="",

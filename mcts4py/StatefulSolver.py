@@ -1,130 +1,86 @@
-from mcts4py.NodeClasses import *
-from mcts4py.Solver import *
 import random
+from mcts4py.Types import *
+from mcts4py.Solver import *
+from mcts4py.MDP import *
 
-# just implement the stateful solver
-class StatefulSolver(Solver):
+class StatefulSolver(MCTSSolver[TAction, StateNode[TState, TAction]], Generic[TState, TAction]):
 
-    def __init__(self, 
-        mdp,
-        discount_factor = 0.9,
-        simulation_depth_limit = 5,
-        verbose = False,
-        exploration_constant = 0.4):
+    def __init__(self,
+        mdp: MDP[TState, TAction],
+        simulation_depth_limit: int,
+        exploration_constant: float,
+        discount_factor: float,
+        verbose: bool = False):
 
         self.mdp = mdp
-        self.discount_factor = discount_factor
         self.simulation_depth_limit = simulation_depth_limit
-        self.verbose = verbose
-        self.root_node = self.createNode(None, None, mdp.initialState())
-        self.exploration_constant = exploration_constant
+        self.discount_factor = discount_factor
+        self.__root_node = self.create_node(None, None, mdp.initial_state())
 
-    def root(self):
-        return self.root_node
+        super().__init__(exploration_constant, verbose)
 
-    # forcibly expore all actions from root:
-    # def initialExploration(self):
-    #     root_node = self.root()
-    #     children = root_node.getChildren(None)
-        
-    #     node = root_node
+    def root(self) -> StateNode[TState, TAction]:
+        return self.__root_node
 
-    #     for action_taken in self.mdp.actions(root_node.state):
-    #         new_state = self.mdp.transition(root_node.state, action_taken)
-    #         new_node = self.createNode(root_node, action_taken, new_state)
-
-    #         self.backpropagate(new_node, 0.9)
-    #     return root_node
-    
-    def select(self, node: ActionNode):
-        # if len(node.getChildren()) == 0:
-        #     return node
-
+    def select(self, node: StateNode[TState, TAction]) -> StateNode[TState, TAction]:
         current_node = node
-        # self.simulateActions(node)
 
         while True:
-            if self.mdp.isTerminal(current_node.state):
-                return None
-            
-            current_children = current_node.getChildren(None)
-            explored_actions = [x.inducing_action for x in current_children]
-
-            valid_actions = self.mdp.actions(current_node.state)
-            if len(list(set(valid_actions) - set(explored_actions))) > 0:
+            # If the node is terminal, return it
+            if self.mdp.is_terminal(current_node.state):
                 return current_node
 
-            current_children_list = list(current_children)
-
-            # if np.random.uniform() < 0.7:      
-            #     return random.choice(current_children_list)
-
-            if len(current_children) > 1:
-                max_ind = np.argmax([self.calculateUCT(a) for a in current_children]) 
-                current_node = current_children_list[max_ind] # throw null
-            else:
+            explored_actions = current_node.explored_actions()
+            # This state has not been fully explored, return it
+            if len(current_node.valid_actions) > len(explored_actions):
                 return current_node
 
-            # self.simulateActions(self.current_node)
-    
-    
-    def expand(self, node):
-        if self.mdp.isTerminal(node.state):
+            # This state has been explored, select best action
+            current_node = max(current_node.get_children(), key=lambda c: self.calculate_uct(c))
+
+    def expand(self, node: StateNode[TState, TAction]) -> StateNode[TState, TAction]:
+        # If the node is terminal, return it
+        if self.mdp.is_terminal(node.state):
             return node
-        
-        valid_actions = self.mdp.actions(node.state)
-        inducing_actions = [x.inducing_action for x in node.getChildren(None)]
-        unexplored_actions = list(set(set(valid_actions) - set(inducing_actions)))
 
-        if len(unexplored_actions) < 1:
-            return None
+        explored_actions = node.explored_actions()
+        unexplored_actions = [a for a in node.valid_actions if a not in explored_actions]
 
-        ind = np.random.choice(len(unexplored_actions), 1, replace = False)[0]
-        action_taken = unexplored_actions[ind]
+        if len(unexplored_actions) == 0:
+            raise RuntimeError("No unexplored actions available")
+
+        # Expand an unexplored action
+        action_taken = random.choice(unexplored_actions)
 
         new_state = self.mdp.transition(node.state, action_taken)
-        new_node = self.createNode(node, action_taken, new_state)
-        return new_node
-    
-    def simulate(self, node):
-        print("Run simulation")
+        return self.create_node(node, action_taken, new_state)
 
-        if node is None:
-            return None
+    def simulate(self, node: StateNode[TState, TAction]) -> float:
+        if self.verbose:
+            print("Simulation:")
 
-
-        if self.mdp.isTerminal(node.state):
-            print("Terminal state reached!")
-            parent_state = node.parent.state if node.parent != None else None
-            if parent_state is not None:
-                return self.mdp.reward(parent_state, node.inducing_action, node.state)
-            else:
-                return 0.0
+        if node.is_terminal:
+            if self.verbose:
+                print("Terminal state reached")
+            parent = node.get_parent()
+            parent_state = parent.state if parent != None else None
+            return self.mdp.reward(parent_state, node.inducing_action, node.state)
 
         depth = 0
         current_state = node.state
         discount = self.discount_factor
 
         while True:
-            #### HACKY ISSUE ####
-            if current_state is None:
-                break
-
             valid_actions = self.mdp.actions(current_state)
-            random_action = np.random.choice(valid_actions, 1)[0]
-
-            # #### HACKY FIX ####
-            # temp_state = self.mdp.transition(current_state, random_action)
-            # while temp_state is None:
-            #     temp_state = self.mdp.transition(current_state, random_action)
-            # new_state = temp_state
-
+            random_action = random.choice(valid_actions)
             new_state = self.mdp.transition(current_state, random_action)
 
-            if self.mdp.isTerminal(new_state):
+            if self.mdp.is_terminal(new_state):
                 reward = self.mdp.reward(current_state, random_action, new_state) * discount
+                if self.verbose:
+                    print(f"-> Terminal state reached: {reward}")
                 return reward
-            
+
             current_state = new_state
             depth += 1
             discount *= self.discount_factor
@@ -132,59 +88,30 @@ class StatefulSolver(Solver):
             if depth > self.simulation_depth_limit:
                 reward = self.mdp.reward(current_state, random_action, new_state) * discount
                 if self.verbose:
-                    print("-> Depth limit reached: " + str(reward))
-                
+                    print(f"-> Depth limit reached: {reward}")
                 return reward
-        return 0.0
-    
-    def backpropagate(self, node, reward):
 
-        if node is None:
-            return None
-
+    def backpropagate(self, node: StateNode[TState, TAction], reward: float) -> None:
         current_state_node = node
         current_reward = reward
-        
-        while True:
-            
-            current_state_node.max_reward = max([current_reward, current_state_node.max_reward])
-            current_state_node.reward = current_reward
+
+        while current_state_node != None:
+            current_state_node.max_reward = max(current_reward, current_state_node.max_reward)
+            current_state_node.reward += current_reward
             current_state_node.n += 1
 
-            if current_state_node.parent != None:
-                current_state_node = current_state_node.parent
-                current_reward *= self.discount_factor
-            else:
-                break
+            current_state_node = current_state_node.parent
+            current_reward *= self.discount_factor
 
-        # return True
-    
     # Utilities
-    def simulateActions(self, node: ActionNode):
-        parent = node.parent
 
-        if parent == None:
-            initial_state = self.mdp.initialState()
-            node.state = initial_state
-            node.valid_actions = self.mdp.actions(initial_state)
-            return True
-        
-        parent_state = parent.state
-        parent_action = node.inducing_action if node.inducing_action != None else None
-
-        state = self.mdp.transition(parent_state, parent_action)
-        node.state = state
-        node.valid_actions = self.mdp.actions(state)
-
-        return True
-    
-    def createNode(self, parent, inducing_action, state): # return state node
+    def create_node(self, parent: Optional[StateNode[TState, TAction]], inducing_action: Optional[TAction], state: TState) -> StateNode[TState, TAction]:
         valid_actions = self.mdp.actions(state)
-        is_terminal = self.mdp.isTerminal(state)
-        state_node = StateNode(parent = parent, inducing_action = inducing_action, state = state, valid_actions = valid_actions, is_terminal = is_terminal)
+        is_terminal = self.mdp.is_terminal(state)
+        state_node = StateNode(parent, inducing_action, state, valid_actions, is_terminal)
 
         if parent != None:
-            parent.addChild(state_node) # parent?.addChild(stateNode) kotlin version
+            parent.add_child(state_node)
 
         return state_node
 
