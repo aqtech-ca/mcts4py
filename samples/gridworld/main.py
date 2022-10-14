@@ -1,5 +1,5 @@
 from mcts4py.DeterministicSolver import *
-from mcts4py.StochasticSolver import StochasticSolver
+from mcts4py.GenericSolver import GenericSolver
 from samples.gridworld.GridworldMDP import *
 
 rewards = [GridworldReward(5, 0, -0.5), GridworldReward(4, 3, 0.5)]
@@ -17,7 +17,7 @@ mdp = GridworldMDP(
 print("Initial state:")
 mdp.visualize_state()
 
-solver = StochasticSolver(
+solver = GenericSolver(
     mdp,
     simulation_depth_limit = 100,
     exploration_constant = 1.0,
