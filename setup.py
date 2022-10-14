@@ -17,3 +17,6 @@ setup(
     url="https://github.com/aqtech-ca/mcts4py",
     zip_safe=True,
 )
+
+# https://gist.github.com/wjladams/f00d6c590a4384ad2a92bf9c53f6b794
+# python3 -m pip install --index-url https://test.pypi.org/simple/ mcts4py
