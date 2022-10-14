@@ -3,7 +3,7 @@ from mcts4py.Types import *
 from mcts4py.Solver import *
 from mcts4py.MDP import *
 
-class StochasticSolver(MCTSSolver[TAction, ActionNode[TState, TAction]], Generic[TState, TAction]):
+class GenericSolver(MCTSSolver[TAction, ActionNode[TState, TAction]], Generic[TState, TAction]):
 
     def __init__(self,
         mdp: MDP[TState, TAction],
