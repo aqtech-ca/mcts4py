@@ -14,6 +14,6 @@ setup(
     description="Python implementation of Monte Carlo Tree Search (MCTS)",
     download_url="",
     license="MIT",
-    url="",
+    url="https://github.com/aqtech-ca/mcts4py",
     zip_safe=True,
 )
