@@ -1,4 +1,4 @@
-from mcts4py.DeterministicSolver import *
+from mcts4py.StatefulSolver import *
 from mcts4py.GenericSolver import GenericSolver
 from samples.gridworld.GridworldMDP import *
 
