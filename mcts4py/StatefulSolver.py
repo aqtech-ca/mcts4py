@@ -3,7 +3,7 @@ from mcts4py.Types import *
 from mcts4py.Solver import *
 from mcts4py.MDP import *
 
-class DeterministicSolver(MCTSSolver[TAction, StateNode[TState, TAction]], Generic[TState, TAction]):
+class StatefulSolver(MCTSSolver[TAction, StateNode[TState, TAction]], Generic[TState, TAction]):
 
     def __init__(self,
         mdp: MDP[TState, TAction],
