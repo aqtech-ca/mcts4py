@@ -71,7 +71,7 @@ class MCTSSolver(ABC, Generic[TAction, TNode]):
         return reward/n + exploration_constant * sqrt(log(parentN)/n)
 
     def extract_optimal_action(self) -> Optional[TAction]:
-        return max(self.root().get_children(), key=lambda c: c.n)
+        return max(self.root().get_children(), key=lambda c: c.reward/c.n)
 
     def display_node(self, node: TNode) -> None:
         if node.parent != None:
@@ -94,6 +94,8 @@ class MCTSSolver(ABC, Generic[TAction, TNode]):
 
         if len(children) == 0:
             return
+
+        children.sort(key=lambda c: c.reward/c.n, reverse=True)
 
         for child in children[:-1]:
             self.display_tree_impl(depth_limit, child, self.generate_indentation(indent) + " ├")
