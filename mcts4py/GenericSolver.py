@@ -101,6 +101,44 @@ class GenericSolver(MCTSSolver[TAction, ActionNode[TState, TAction]], Generic[TS
                     print(f"-> Depth limit reached: {reward}")
                 return reward
 
+
+    def simulate_cumulative_reward(self, node: ActionNode[TState, TAction], depth=0) -> float:
+
+        if self.verbose:
+            print("Simulation:")
+
+        if self.mdp.is_terminal(node.state):
+            if self.verbose:
+                print("Terminal state reached")
+            parent = node.get_parent()
+            parent_state = parent.state if parent != None else None
+            return self.mdp.reward(parent_state, node.inducing_action, node.state)
+
+        current_state = node.state
+        discount = self.discount_factor ** depth
+
+        valid_actions = self.mdp.actions(current_state)
+        random_action = random.choice(valid_actions)
+        new_state = self.mdp.transition(current_state, random_action)
+
+        reward = self.mdp.reward(current_state, random_action, new_state) * discount
+        if self.mdp.is_terminal(new_state):
+            reward = self.mdp.reward(current_state, random_action, new_state) * discount
+            if self.verbose:
+                print(f"-> Terminal state reached: {reward}")
+            return reward
+
+        if depth > self.simulation_depth_limit:
+            reward = self.mdp.reward(current_state, random_action, new_state) * discount
+            if self.verbose:
+                print(f"-> Depth limit reached: {reward}")
+            return reward
+        next_node = ActionNode(node, random_action)
+        next_node.state = new_state
+        reward += self.simulate(next_node, depth=depth + 1)
+        return reward
+
+
     def backpropagate(self, node: ActionNode[TState, TAction], reward: float) -> None:
         current_node = node
         current_reward = reward
