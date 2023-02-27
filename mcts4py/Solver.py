@@ -83,6 +83,35 @@ class MCTSSolver(ABC, Generic[TAction, TNode]):
     def display_tree(self, depth_limit: int = 3) -> None:
         self.display_tree_impl(depth_limit, self.root(), "")
 
+    def save_tree_impl(self, depth_limit, node: Optional[TNode], indent: str, path: str):
+        if node == None or node.depth > depth_limit:
+            return
+        with open(path, 'a') as f:
+            f.write(
+                f"{indent} {str(node)} (n: {node.n}, reward: {node.reward / node.n:.3f}, UCT: "
+                f"{self.calculate_uct(node):.3f})")
+            f.write('\n')
+
+        children = node.get_children()
+
+        if len(children) == 0:
+            return
+
+        children.sort(key=lambda c: c.reward / c.n, reverse=True)
+
+        for child in children[:-1]:
+            self.save_tree_impl(depth_limit, child, self.generate_indentation(indent) + " ├", path)
+        self.save_tree_impl(depth_limit, children[-1], self.generate_indentation(indent) + " └", path)
+
+    def save_tree(self, simulation_depth_limit, exploration_constant, discount_factor, run_search, now, depth_limit=10,
+                  indent="", path=f'runs/'):
+        import os
+        if not os.path.exists(path):
+            os.makedirs(path)
+        path = path + 'tree.txt'
+        node = self.root()
+        self.save_tree_impl(depth_limit, node, indent, path)
+
     def display_tree_impl(self, depth_limit: int, node: Optional[TNode], indent: str) -> None:
 
         if node == None or node.depth > depth_limit:
