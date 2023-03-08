@@ -20,9 +20,10 @@ class ProgressiveWideningSolver(MCTSSolver[TAction, StateNode[TState, TAction]],
         self.mdp = mdp
         self.simulation_depth_limit = simulation_depth_limit
         self.discount_factor = discount_factor
+        super().__init__(exploration_constant, verbose, max_iteration, early_stop, early_stop_condition)
         self.__root_node = self.create_node(None, None, mdp.initial_state())
 
-        super().__init__(exploration_constant, verbose, max_iteration, early_stop, early_stop_condition)
+
 
     def root(self) -> StateNode[TState, TAction]:
         return self.__root_node
@@ -138,7 +139,7 @@ class ProgressiveWideningSolver(MCTSSolver[TAction, StateNode[TState, TAction]],
             self.display_node(expanded)
 
         # Simulation
-        simulated_reward = self.simulate(expanded, iteration_number)
+        simulated_reward = self.simulate(expanded, iteration_number=iteration_number    )
 
         if self.verbose:
             print(f"Simulated reward: {simulated_reward}")
@@ -158,3 +159,37 @@ class ProgressiveWideningSolver(MCTSSolver[TAction, StateNode[TState, TAction]],
             parent.add_child(state_node)
 
         return state_node
+
+
+    def save_tree_impl(self, depth_limit, node: Optional[TNode], indent: str, path: str):
+        if node == None or node.depth > depth_limit:
+            return
+        with open(path, 'a') as f:
+            f.write(
+                f"{indent} {str(node)} (n: {node.n}, reward: {node.reward / node.n:.3f}, UCT: "
+                f"{self.calculate_uct(node):.3f})")
+            f.write('\n')
+
+        children = node.get_children()
+
+        if len(children) == 0:
+            return
+
+        children.sort(key=lambda c: c.reward / c.n, reverse=True)
+
+        for child in children[:-1]:
+            self.save_tree_impl(depth_limit, child, self.generate_indentation(indent) + " ├", path)
+        self.save_tree_impl(depth_limit, children[-1], self.generate_indentation(indent) + " └", path)
+
+    def save_tree(self, depth_limit=10, indent="", path=f'runs/', simulation_number=0, prices='None', run_time='None'):
+        import os
+        if not os.path.exists(path):
+            os.makedirs(path)
+        path = path + f'/tree{simulation_number}.txt'
+        node = self.root()
+        with open(path, 'a') as f:
+            f.write(f"Prices:{prices}")
+            f.write('\n')
+            f.write(f"Run Time:{run_time}")
+            f.write('\n')
+        self.save_tree_impl(depth_limit, node, indent, path)
