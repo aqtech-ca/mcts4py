@@ -5,13 +5,16 @@ from mcts4py.MDP import *
 import copy
 
 
-class StatefulSolver(MCTSSolver[TAction, StateNode[TState, TAction]], Generic[TState, TAction]):
+class ProgressiveWideningSolver(MCTSSolver[TAction, StateNode[TState, TAction]], Generic[TState, TAction]):
 
     def __init__(self,
                  mdp: MDP[TState, TAction],
                  simulation_depth_limit: int,
                  exploration_constant: float,
                  discount_factor: float,
+                 max_iteration: int,
+                 early_stop: bool,
+                 early_stop_condition: dict=None,
                  verbose: bool = False):
 
         self.mdp = mdp
@@ -19,7 +22,7 @@ class StatefulSolver(MCTSSolver[TAction, StateNode[TState, TAction]], Generic[TS
         self.discount_factor = discount_factor
         self.__root_node = self.create_node(None, None, mdp.initial_state())
 
-        super().__init__(exploration_constant, verbose)
+        super().__init__(exploration_constant, verbose, max_iteration, early_stop, early_stop_condition)
 
     def root(self) -> StateNode[TState, TAction]:
         return self.__root_node
