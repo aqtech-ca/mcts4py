@@ -25,3 +25,10 @@ class MDP(ABC, Generic[TState, TAction]):
     def is_terminal(self, state: TState) -> bool:
         raise NotImplementedError
 
+    @abstractmethod
+    def widening_actions(self, state: TState, number_of_visits: int, iteration_number: int, max_iteration_number: int) -> list[TAction]:
+        """
+        If you want to apply progressive widening, you need to define how to progressively widen the actions
+        :return:
+        """
+        pass
