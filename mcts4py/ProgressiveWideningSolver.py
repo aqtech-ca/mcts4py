@@ -139,7 +139,7 @@ class ProgressiveWideningSolver(MCTSSolver[TAction, StateNode[TState, TAction]],
             self.display_node(expanded)
 
         # Simulation
-        simulated_reward = self.simulate(expanded, iteration_number=iteration_number    )
+        simulated_reward = self.simulate(expanded, iteration_number=iteration_number)
 
         if self.verbose:
             print(f"Simulated reward: {simulated_reward}")
