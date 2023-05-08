@@ -4,7 +4,7 @@ from mcts4py.Solver import *
 from mcts4py.ProgressiveWideningSolver import *
 from mcts4py.MDP import *
 import pandas as pd
-
+from joblib import load
 class PuctSolver(ProgressiveWideningSolver):
 
     def __init__(self,
@@ -16,11 +16,12 @@ class PuctSolver(ProgressiveWideningSolver):
                  max_iteration:int=1000,
                  early_stop: bool = False,
                  early_stop_condition: dict = None,
-                 exploration_constant_decay=1):
+                 exploration_constant_decay=1,
+                 models: list =None,
+                 stds: list = None):
 
-        self.probabilities = pd.read_csv('lr_models/probabilities.csv', index_col=0)
-        self.probabilities.set_index(['port', 'refuel_amount'], inplace=True)
-        self.probabilities = self.probabilities.to_dict()['prob']
+        self.models = models
+        self.stds = stds
         super().__init__(mdp, simulation_depth_limit, discount_factor, exploration_constant, verbose, max_iteration, early_stop,
                          early_stop_condition, exploration_constant_decay)
 
@@ -57,10 +58,26 @@ class PuctSolver(ProgressiveWideningSolver):
     def calculate_puct(self, node: TNode):
 
         # use the loaded model to make predictions
-        try:
-            probability = self.probabilities[node.state.port, node.inducing_action.refuel_amount]
-        except KeyError:
-            probability = 0.001
-        puct_constant = self.exploration_constant * probability
+
+
+        port = node.state.port
+        std = self.stds[port]
+        model = self.models[port]
+        value = [node.state.price, node.state.fuel_amount]
+        prediction = model.predict(np.array(value).reshape(1, -1))
+        ref_am = node.inducing_action.refuel_amount
+        if ref_am == 0:
+            prob = 0.5
+        elif prediction * (1 - std * 0.5) < node.inducing_action.refuel_amount <= prediction * (1 + std * 0.5):
+            prob = 0.4
+        elif prediction * (1 - std) < node.inducing_action.refuel_amount <= prediction * (1 + std):
+            prob = 0.2
+        elif prediction * (1 - std * 1.5) < node.inducing_action.refuel_amount <= prediction * (1 + std * 1.5):
+            prob = 0.1
+        elif prediction * (1 - std * 3) < node.inducing_action.refuel_amount <= prediction * (1 + std * 3):
+            prob = 0.05
+        else:
+            prob = 0.01
+        puct_constant = self.exploration_constant * prob
         parentN = node.parent.n if node.parent != None else node.n
         return self.calculate_uct_impl(parentN, node.n, node.reward, puct_constant)

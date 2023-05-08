@@ -59,19 +59,20 @@ class MCTSSolver(ABC, Generic[TAction, TNode, TRandom]):
 
     def run_search(self, iterations: int):
         simulated_rewards = []
-        for iteration_number in tqdm(range(iterations), desc="Iterations", position=2,
-                                     leave=True, disable=False, mininterval=5):
-            if iteration_number == 150:
-                a = 0
+        # for iteration_number in tqdm(range(iterations), desc="Iterations", position=2,
+        #                              leave=True, disable=False, mininterval=20):
+
+        for iteration_number in range(iterations):
             if self.verbose:
                 print(f"\nNew iteration: {iteration_number}")
                 print("=======================")
             self.exploration_constant *= self.exploration_constant_decay
             simulated_rewards.append(self.run_search_iteration(iteration_number=iteration_number))
             if self.early_stop:
-                if iteration_number > self.min_iteration and self.early_stop:
-                    a = np.mean(simulated_rewards[-self.last_iterations_number:])
-                    if a >= simulated_rewards[-1] * (1 + self.epsilon) and a <= simulated_rewards[-1] * (
+                if iteration_number > self.min_iteration:
+                    a = np.mean(simulated_rewards[int(-self.last_iterations_number):])
+                    last = simulated_rewards[-1]
+                    if a <= simulated_rewards[-1] * (1 + self.epsilon) and a >= simulated_rewards[-1] * (
                             1 - self.epsilon):
                         if self.verbose:
                             print('Iteration: ', iteration_number)
@@ -135,7 +136,7 @@ class MCTSSolver(ABC, Generic[TAction, TNode, TRandom]):
             f"{indent} {str(node)} (n: {node.n}, reward: {node.reward / node.n:.3f}, UCT: "
             f"{self.calculate_uct(node):.3f})")
 
-        children = node.get_children()
+        children = node.children
 
         if len(children) == 0:
             return
@@ -186,20 +187,31 @@ class MCTSSolver(ABC, Generic[TAction, TNode, TRandom]):
         dot = graphviz.Digraph("wide")
         dot.graph_attr['rankdir'] = 'TB'
         added_nodes = dict()
+        added_edges = dict()
         color = 'blue'
 
         def add_nodes(node):
+            added_edges[node.name] = []
             for child in node.children:
+                if isinstance(child, DecisionNode):
+                    color = 'blue'
+                else:
+                    color = 'red'
                 if child.name in added_nodes.keys():
+
                     already = added_nodes[child.name]
                     dot.node(child.name, label=f"{child.name}\n({child.n + already})", color=color, style='filled',
                              fillcolor=color, fontcolor='white')
                     added_nodes[child.name] += child.n
+
                 else:
-                    dot.node(child.name, label=f"{child.name}\n({child.n})", color=color, style='filled',
+                    dot.node(child.name, label=f"{child.name}\n({child.n})", color='red', style='filled',
                              fillcolor=color, fontcolor='white')
                     added_nodes[child.name] = child.n
-                dot.edge(node.name, child.name)
+
+                if child.name not in added_edges[node.name]:
+                    dot.edge(node.name, child.name)
+                    added_edges[node.name].append(child.name)
                 add_nodes(child)
 
         root = self.root()

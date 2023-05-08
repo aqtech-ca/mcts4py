@@ -24,14 +24,15 @@ class DPWSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic
                  early_stop: bool = False,
                  early_stop_condition: dict = None,
                  exploration_constant_decay=1,
-                 dpw_exploration=1,
-                 dpw_alpha=1):
-        self.selection_time = 0
-        self.backp_time  = 0
-        self.expansion_time = 0
-        self.time1 = 0
-        self.time2 = 0
-        self.simulation_time = 0
+                 dpw_exploration: float = None,
+                 dpw_alpha: float = None):
+        # self.selection_time = 0
+        # self.backp_time = 0
+        # self.expansion_time = 0
+        # self.time1 = 0
+        # self.time2 = 0
+        # self.time3 = 0
+        # self.simulation_time = 0
         self.mdp = mdp
         self.simulation_depth_limit = simulation_depth_limit
         self.discount_factor = discount_factor
@@ -47,7 +48,9 @@ class DPWSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic
     def select(self, node: DecisionNode[TRandom, TAction], iteration_number: int = None) -> NewNode[
         TAction, TRandom]:
         current_node = node
+        counter = 0
         while True:
+            counter += 1
             if self.mdp.is_terminal(current_node.state):
                 return current_node
             if isinstance(current_node, RandomNode):
@@ -62,22 +65,28 @@ class DPWSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic
             #         return current_node
             # else:
             # if len(current_node.explored_actions())< len(current_node.valid_actions):
-            pos_actions = self.mdp.actions(current_node.state, t, dpw_exploration=self.dpw_exp,
-                                           dpw_alpha=self.dpw_alpha)
             start_time = time.time()
-            for act in pos_actions:
+            for act in current_node.valid_actions:
                 if act not in current_node.explored_actions():
                     chosen_action = act
                     new_child = self.create_node(current_node, chosen_action, current_node.state)
                     chosen_child = new_child
-                    #self.time2 += (time.time() - start_time) * 10000
+                    # self.time2 += (time.time() - start_time) * 10000
                     return chosen_child
-            #self.time2 += (time.time() - start_time) * 10000
+            # self.time2 += (time.time() - start_time) * 10000
             try:
                 current_node = max(current_node.children, key=lambda c: self.calculate_uct(c))
+                if current_node.n%100 ==99:
+                    current_node.valid_actions = self.mdp.actions(current_node.state, t,
+                                                                  dpw_exploration=self.dpw_exp,
+                                                                  dpw_alpha=self.dpw_alpha)
             except ValueError:
                 if self.mdp.is_terminal(current_node.state):
                     return current_node
+                else:
+                    current_node.valid_actions = self.mdp.actions(current_node.state, t,
+                                                                  dpw_exploration=self.dpw_exp*counter*counter*2,
+                                                                  dpw_alpha=self.dpw_alpha*2)
 
     def expand(self, node: DecisionNode[TRandom, TAction], iteration_number=None) -> NewNode[
         TAction, TRandom]:
@@ -135,19 +144,27 @@ class DPWSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic
         if depth == 0:
             start_time = time.time()
             current_node = node
-            self.time2 += (time.time() - start_time)*1000000
+            self.time2 += (time.time() - start_time) * 1000000
             while current_node.parent is not None:
-                #if isinstance(current_node, DecisionNode):
+                # if isinstance(current_node, DecisionNode):
                 reward += self.mdp.reward(current_node.parent.state, current_node.inducing_action)
                 current_node = current_node.parent.parent
-        self.time1 += (time.time() - start_time1)*100000
+        self.time1 += (time.time() - start_time1) * 100000
         if self.mdp.is_terminal(node.state):
             return reward
         current_state = node.state
         discount = self.discount_factor ** depth
-        valid_actions = self.mdp.actions(current_state, node.n, dpw_exploration=self.dpw_exp, dpw_alpha=self.dpw_alpha)
+        start_time = time.time()
+        valid_actions = self.mdp.actions(current_state, node.n, dpw_exploration=self.dpw_exp, dpw_alpha=self.dpw_alpha, min_action=True)
+        # try:
         random_action = random.choice(valid_actions)
+        # except IndexError:
+        #     valid_actions = self.mdp.actions(current_state, 1, dpw_exploration=10,
+        #                                      dpw_alpha=1)
+
+            #random_action = random.choice(valid_actions)
         new_state = self.mdp.transition(current_state, random_action)
+        self.time3 += (time.time() - start_time) * 100000
 
         if self.mdp.is_terminal(new_state):
             reward += self.mdp.reward(current_state, random_action) * discount
@@ -184,38 +201,40 @@ class DPWSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic
     def run_search_iteration(self, iteration_number=None):
         # Selection
         root_node = self.root()
-        start_time = time.time()
+        #start_time = time.time()
         best = self.select(root_node)
-        self.selection_time += (time.time() - start_time) * 10000
-        start_time = time.time()
+        #self.selection_time += (time.time() - start_time) * 100000
+        #start_time = time.time()
         expanded = self.expand(best)
-        self.expansion_time += (time.time() - start_time) * 10000
+        #self.expansion_time += (time.time() - start_time) * 100000
         if self.verbose:
             print("Expanded to:")
             self.display_node(expanded)
 
         # Simulation
-        start_time = time.time()
+        #start_time = time.time()
         simulated_reward = self.simulate(expanded)
-        self.simulation_time += (time.time() - start_time) * 10000
+        #self.simulation_time += (time.time() - start_time) * 100000
 
         if self.verbose:
             print(f"Simulated reward: {simulated_reward}")
 
         # Backpropagation
-        start_time = time.time()
+        #start_time = time.time()
         self.backpropagate(expanded, simulated_reward)
-        self.backp_time += (time.time() - start_time) * 10000
-        # if iteration_number % 50 == 49:
+        #self.backp_time += (time.time() - start_time) * 100000
+        # if iteration_number % 2000 == 1:
         #     print('------------------------  ')
         #     print(iteration_number)
         #     print('SELECTION TIME:', round((self.selection_time / 50)))
         #     print('TIME1         :', round((self.time1 / 50) ))
         #     print('TIME2         :', round((self.time2 / 50) ))
+        #     print('TIME3         :', round((self.time3 / 50)))
         #     print('EXPANSION TIME:', round((self.expansion_time / 50) ))
         #     print('SIMULATION TIME:', round((self.simulation_time / 50) ))
         #     print('BACKPROPOG TIME:', round((self.backp_time / 50) ))
-        #     self.selection_time, self.time1, self.time2, self.expansion_time, self.simulation_time, self.backp_time = 0, 0, 0, 0, 0, 0
+        #     self.selection_time, self.time1, self.time2, self.expansion_time, self.simulation_time, self.backp_time
+        #     = 0, 0, 0, 0, 0, 0
         #     print('------------------------  ')
         return simulated_reward
 

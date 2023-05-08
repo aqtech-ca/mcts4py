@@ -45,10 +45,7 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
                 return current_node
 
             # This state has been explored, select best action
-            try:
-                current_node = max(current_node.get_children(), key=lambda c: self.calculate_uct(c))
-            except:
-                a = 0
+            current_node = max(current_node.get_children(), key=lambda c: self.calculate_uct(c))
 
     def expand(self, node: StateNode[TState, TAction], iteration_number = None) -> StateNode[TState, TAction]:
         # If the node is terminal, return it
@@ -119,8 +116,6 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
         if self.mdp.is_terminal(node.state):
             if self.verbose:
                 print("Terminal state reached")
-            parent = node.get_parent()
-            parent_state = parent.state if parent != None else None
             # reward += self.mdp.reward(parent_state, node.inducing_action, node.state) # ALREADY INCLUDED UPPER
             return reward
 

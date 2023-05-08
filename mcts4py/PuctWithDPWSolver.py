@@ -71,8 +71,9 @@ class PuctWithDPWSolver(DPWSolver):
             probability = self.probabilities[node.state.port, node.inducing_action.refuel_amount]
         except KeyError:
             probability = 0.001
-        if node.state.port == 4:
-            probability = 1
+        probability = 1
+        if node.inducing_action.refuel_amount == 0:
+            probability = 10000
         puct_constant = self.exploration_constant * probability
         parentN = node.parent.n if node.parent != None else node.n
         return self.calculate_uct_impl(parentN, node.n, node.reward, puct_constant)

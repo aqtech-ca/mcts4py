@@ -65,7 +65,7 @@ class PuctSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
 
         if isinstance(node, DecisionNode):
             explored_actions = node.explored_actions()
-            node.valid_actions = self.mdp.widening_actions(node.state, node.n, iteration_number, self.max_iteration)
+            node.valid_actions = self.mdp.actions(node.state, node.n, iteration_number, self.max_iteration)
             unexplored_actions = [a for a in node.valid_actions if a not in explored_actions]
             if len(unexplored_actions) == 0:
                 return node
@@ -92,7 +92,7 @@ class PuctSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
         if node.is_terminal:
             return reward
         if isinstance(node, DecisionNode):
-            valid_actions = self.mdp.widening_actions(node.state, node.n, iteration_number, self.max_iteration)
+            valid_actions = self.mdp.actions(node.state, node.n, iteration_number, self.max_iteration)
             random_action = random.choice(valid_actions)
             reward += self.mdp.reward(node.state, random_action) * (self.discount_factor ** depth)
             if node.is_terminal or depth >= self.simulation_depth_limit:
@@ -103,7 +103,7 @@ class PuctSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
                 return reward
         elif isinstance(node, RandomNode):
             next_state = self.mdp.transition(node.state, node.inducing_action)
-            valid_actions = self.mdp.widening_actions(next_state, node.n, iteration_number, self.max_iteration)
+            valid_actions = self.mdp.actions(next_state, node.n, iteration_number, self.max_iteration)
             next_node = DecisionNode(None, node.inducing_action, next_state, valid_actions,
                                      self.mdp.is_terminal(next_state))
             reward += self.simulate(next_node, depth + 1, iteration_number)
@@ -155,7 +155,7 @@ class PuctSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
             is_terminal = self.mdp.is_terminal(state)
             node = RandomNode(parent, inducing_action, state, is_terminal)
         else:  # isinstance(state, DecisionNode):
-            valid_actions = self.mdp.widening_actions(state, number_of_visits, iteration_number, self.max_iteration)
+            valid_actions = self.mdp.actions(state, number_of_visits, iteration_number, self.max_iteration)
             is_terminal = self.mdp.is_terminal(state)
             node = DecisionNode(parent, inducing_action, state, valid_actions, is_terminal)
 
