@@ -13,5 +13,10 @@ To run samples:
 To install from PyPI,
 
 ```
-python3 -m pip install --index-url https://test.pypi.org/simple/ mcts4py-0.12
+python3 -m pip install --index-url https://test.pypi.org/simple/ mcts4py
+```
+
+To build for PyPI
+```
+python setup.py bdist_wheel
 ```

@@ -25,6 +25,7 @@ class MDP(ABC, Generic[TState, TAction]):
     def is_terminal(self, state: TState) -> bool:
         raise NotImplementedError
 
+class MDPWidening(MDP):
     @abstractmethod
     def widening_actions(self, state: TState, number_of_visits: int, iteration_number: int, max_iteration_number: int) -> list[TAction]:
         """
