@@ -3,14 +3,15 @@ from mcts4py.Types import *
 from mcts4py.Solver import *
 from mcts4py.MDP import *
 
-class GenericSolver(MCTSSolver[TAction, ActionNode[TState, TAction]], Generic[TState, TAction]):
+
+class GenericSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic[TState, TAction, TRandom]):
 
     def __init__(self,
-        mdp: MDP[TState, TAction],
-        simulation_depth_limit: int,
-        exploration_constant: float,
-        discount_factor: float,
-        verbose: bool = False):
+                 mdp: MDP[TState, TAction],
+                 simulation_depth_limit: int,
+                 exploration_constant: float,
+                 discount_factor: float,
+                 verbose: bool = False):
 
         self.mdp = mdp
         self.simulation_depth_limit = simulation_depth_limit
@@ -23,8 +24,8 @@ class GenericSolver(MCTSSolver[TAction, ActionNode[TState, TAction]], Generic[TS
     def root(self) -> ActionNode[TState, TAction]:
         return self.__root_node
 
-    def select(self, node: ActionNode[TState, TAction]) -> ActionNode[TState, TAction]:
-        if len(node.get_children()) == 0:
+    def select(self, node: ActionNode[TState, TAction], iteration_number=None) -> ActionNode[TState, TAction]:
+        if len(node.children) == 0:
             return node
 
         current_node = node
@@ -35,8 +36,8 @@ class GenericSolver(MCTSSolver[TAction, ActionNode[TState, TAction]], Generic[TS
             if self.mdp.is_terminal(current_node.state):
                 return current_node
 
-            current_children = current_node.get_children()
-            explored_actions = set([ c.inducing_action for c in current_children ])
+            current_children = current_node.children
+            explored_actions = set([c.inducing_action for c in current_children])
 
             # This state has not been fully explored, return it
             if len(set(current_node.valid_actions) - explored_actions) > 0:
@@ -46,13 +47,13 @@ class GenericSolver(MCTSSolver[TAction, ActionNode[TState, TAction]], Generic[TS
             current_node = max(current_children, key=lambda c: self.calculate_uct(c))
             self.simulate_action(current_node)
 
-    def expand(self, node: ActionNode[TState, TAction]) -> ActionNode[TState, TAction]:
+    def expand(self, node: ActionNode[TState, TAction], iteration_number=None) -> ActionNode[TState, TAction]:
         # If the node is terminal, return it
         if self.mdp.is_terminal(node.state):
             return node
 
-        current_children = node.get_children()
-        explored_actions = set([ c.inducing_action for c in current_children ])
+        current_children = node.children
+        explored_actions = set([c.inducing_action for c in current_children])
         valid_action: set[TAction] = set(node.valid_actions)
         unexplored_actions = valid_action - explored_actions
 
@@ -65,44 +66,43 @@ class GenericSolver(MCTSSolver[TAction, ActionNode[TState, TAction]], Generic[TS
 
         return new_node
 
-    def simulate(self, node: ActionNode[TState, TAction]) -> float:
-        if self.verbose:
-            print("Simulation:")
+    # def simulate(self, node: ActionNode[TState, TAction]) -> float:
+    #     if self.verbose:
+    #         print("Simulation:")
+    #
+    #     if self.mdp.is_terminal(node.state):
+    #         if self.verbose:
+    #             print("Terminal state reached")
+    #         parent = node.get_parent()
+    #         parent_state = parent.state if parent != None else None
+    #         return self.mdp.reward(parent_state, node.inducing_action, node.state)
+    #
+    #     depth = 0
+    #     current_state = node.state
+    #     discount = self.discount_factor
+    #
+    #     while True:
+    #         valid_actions = self.mdp.actions(current_state)
+    #         random_action = random.choice(valid_actions)
+    #         new_state = self.mdp.transition(current_state, random_action)
+    #
+    #         if self.mdp.is_terminal(new_state):
+    #             reward = self.mdp.reward(current_state, random_action, new_state) * discount
+    #             if self.verbose:
+    #                 print(f"-> Terminal state reached: {reward}")
+    #             return reward
+    #
+    #         current_state = new_state
+    #         depth += 1
+    #         discount *= self.discount_factor
+    #
+    #         if depth > self.simulation_depth_limit:
+    #             reward = self.mdp.reward(current_state, random_action, new_state) * discount
+    #             if self.verbose:
+    #                 print(f"-> Depth limit reached: {reward}")
+    #             return reward
 
-        if self.mdp.is_terminal(node.state):
-            if self.verbose:
-                print("Terminal state reached")
-            parent = node.get_parent()
-            parent_state = parent.state if parent != None else None
-            return self.mdp.reward(parent_state, node.inducing_action, node.state)
-
-        depth = 0
-        current_state = node.state
-        discount = self.discount_factor
-
-        while True:
-            valid_actions = self.mdp.actions(current_state)
-            random_action = random.choice(valid_actions)
-            new_state = self.mdp.transition(current_state, random_action)
-
-            if self.mdp.is_terminal(new_state):
-                reward = self.mdp.reward(current_state, random_action, new_state) * discount
-                if self.verbose:
-                    print(f"-> Terminal state reached: {reward}")
-                return reward
-
-            current_state = new_state
-            depth += 1
-            discount *= self.discount_factor
-
-            if depth > self.simulation_depth_limit:
-                reward = self.mdp.reward(current_state, random_action, new_state) * discount
-                if self.verbose:
-                    print(f"-> Depth limit reached: {reward}")
-                return reward
-
-
-    def simulate_cumulative_reward(self, node: ActionNode[TState, TAction], depth=0) -> float:
+    def simulate(self, node: ActionNode[TState, TAction], depth=0) -> float:
 
         if self.verbose:
             print("Simulation:")
@@ -137,7 +137,6 @@ class GenericSolver(MCTSSolver[TAction, ActionNode[TState, TAction]], Generic[TS
         next_node.state = new_state
         reward += self.simulate(next_node, depth=depth + 1)
         return reward
-
 
     def backpropagate(self, node: ActionNode[TState, TAction], reward: float) -> None:
         current_node = node
