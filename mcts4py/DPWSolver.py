@@ -1,16 +1,6 @@
-import math
-import os
-import random
-import time
-
 from mcts4py.Solver import *
 from mcts4py.MDP import *
-import copy
-from math import floor
-from tqdm import tqdm
 import numpy as np
-import statistics
-import graphviz
 
 
 class DPWSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic[TState, TAction, TRandom]):
@@ -74,7 +64,6 @@ class DPWSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic
                 current_node.valid_actions = self.mdp.actions(current_node.state, current_node.n + 1,
                                                               dpw_exploration=self.dpw_exp,
                                                               dpw_alpha=self.dpw_alpha)
-            start_time = time.time()
             explored_actions = current_node.explored_actions()
             if len(explored_actions) < len(current_node.valid_actions):
                 unexplored_actions = [a for a in current_node.valid_actions if a not in explored_actions]
@@ -91,8 +80,6 @@ class DPWSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic
                                                                   dpw_exploration=self.dpw_exp * counter * counter * 2,
                                                                   dpw_alpha=self.dpw_alpha * 2)
 
-            self.time3 += (time.time() - start_time) * 100000
-
     def expand(self, node: TNode) -> TNode:
         return node
 
@@ -105,7 +92,6 @@ class DPWSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic
                 current_node = current_node.parent.parent
                 if current_node is None:
                     break
-        #      self.time1 += (time.time() - start_time1) * 100000
         if self.mdp.is_terminal(node.state):
             return reward
         if isinstance(node, RandomNode):

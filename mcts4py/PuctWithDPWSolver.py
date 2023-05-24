@@ -1,16 +1,5 @@
-import math
-import random
-import time
-
 from mcts4py.DPWSolver import *
 from mcts4py.MDP import *
-import copy
-from math import floor
-from tqdm import tqdm
-import numpy as np
-import statistics
-import graphviz
-import pandas as pd
 
 
 class PuctWithDPWSolver(DPWSolver):
@@ -27,11 +16,8 @@ class PuctWithDPWSolver(DPWSolver):
                  exploration_constant_decay=1,
                  dpw_exploration=1,
                  dpw_alpha=1):
-        self.probabilities = pd.read_csv('lr_models/probabilities.csv', index_col=0)
-        self.probabilities.set_index(['port', 'refuel_amount'], inplace=True)
         super().__init__(mdp, simulation_depth_limit, discount_factor, exploration_constant, verbose, max_iteration,
                          early_stop, early_stop_condition, exploration_constant_decay, dpw_exploration, dpw_alpha)
-
 
     def select(self, node: DecisionNode[TRandom, TAction], iteration_number: int = None) -> NewNode[
         TAction, TRandom]:

@@ -1,6 +1,3 @@
-import os
-import random
-from mcts4py.Types import *
 from mcts4py.Solver import *
 from mcts4py.StatefulSolver import StatefulSolver
 from mcts4py.MDP import *

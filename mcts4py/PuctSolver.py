@@ -1,10 +1,7 @@
-import random
-from mcts4py.Types import *
-from mcts4py.Solver import *
 from mcts4py.ProgressiveWideningSolver import *
 from mcts4py.MDP import *
-import pandas as pd
-from joblib import load
+
+
 class PuctSolver(ProgressiveWideningSolver):
 
     def __init__(self,
@@ -13,7 +10,7 @@ class PuctSolver(ProgressiveWideningSolver):
                  discount_factor: float,
                  exploration_constant: float,
                  verbose: bool = False,
-                 max_iteration:int=1000,
+                 max_iteration: int = 1000,
                  early_stop: bool = False,
                  early_stop_condition: dict = None,
                  exploration_constant_decay=1):
@@ -41,7 +38,6 @@ class PuctSolver(ProgressiveWideningSolver):
             # This state has been explored, select best action
 
             current_node = max(current_node.children, key=lambda c: self.calculate_puct(c))
-
 
     def calculate_puct(self, node):
         if node.parent is None:
