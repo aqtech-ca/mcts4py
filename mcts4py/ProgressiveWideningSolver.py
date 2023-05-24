@@ -1,3 +1,4 @@
+import os
 import random
 from mcts4py.Types import *
 from mcts4py.Solver import *
@@ -31,8 +32,10 @@ class ProgressiveWideningSolver(StatefulSolver):
         current_node = node
 
         while True:
-            current_node.valid_actions = self.mdp.actions(current_node.state, current_node.n, iteration_number,
-                                                          self.max_iteration, dpw_exploration=self.dpw_exploration, dpw_alpha=self.dpw_alpha)
+            if current_node.n % 50 == 49:
+                current_node.valid_actions = self.mdp.actions(current_node.state, current_node.n, iteration_number,
+                                                              self.max_iteration, dpw_exploration=self.dpw_exploration,
+                                                              dpw_alpha=self.dpw_alpha)
             # If the node is terminal, return it
             if self.mdp.is_terminal(current_node.state):
                 return current_node
@@ -79,11 +82,11 @@ class ProgressiveWideningSolver(StatefulSolver):
             if self.verbose:
                 print("Terminal state reached")
             return reward
-
         current_state = node.state
         discount = self.discount_factor ** depth
         valid_actions = self.mdp.actions(current_state, node.n, iteration_number=iteration_number,
-                                         max_iteration_number=self.max_iteration, dpw_alpha=self.dpw_alpha, dpw_exploration=self.dpw_exploration,
+                                         max_iteration_number=self.max_iteration, dpw_alpha=self.dpw_alpha,
+                                         dpw_exploration=self.dpw_exploration,
                                          min_action=True)
         random_action = random.choice(valid_actions)
         new_state = self.mdp.transition(current_state, random_action)
@@ -112,24 +115,19 @@ class ProgressiveWideningSolver(StatefulSolver):
         # Selection
         root_node = self.root()
         best = self.select(root_node, iteration_number)
-
         if self.verbose:
             print("Selected:")
             self.display_node(best)
 
         # Expansion
         expanded = self.expand(best, iteration_number)
-
         if self.verbose:
             print("Expanded to:")
             self.display_node(expanded)
-
         # Simulation
         simulated_reward = self.simulate(expanded, iteration_number=iteration_number)
-
         if self.verbose:
             print(f"Simulated reward: {simulated_reward}")
-
         # Backpropagation
         self.backpropagate(expanded, simulated_reward)
         return simulated_reward
@@ -137,7 +135,8 @@ class ProgressiveWideningSolver(StatefulSolver):
     def create_node(self, parent: Optional[StateNode[TState, TAction]], inducing_action: Optional[TAction],
                     state: TState, number_of_visits=0, iteration_number=0) -> StateNode[TState, TAction]:
 
-        valid_actions = self.mdp.actions(state, number_of_visits, iteration_number, self.max_iteration, dpw_exploration=self.dpw_exploration, dpw_alpha=self.dpw_alpha)
+        valid_actions = self.mdp.actions(state, number_of_visits, iteration_number, self.max_iteration,
+                                         dpw_exploration=self.dpw_exploration, dpw_alpha=self.dpw_alpha)
         is_terminal = self.mdp.is_terminal(state)
         state_node = StateNode(parent, inducing_action, state, valid_actions, is_terminal)
 

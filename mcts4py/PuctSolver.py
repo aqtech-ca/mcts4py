@@ -16,12 +16,8 @@ class PuctSolver(ProgressiveWideningSolver):
                  max_iteration:int=1000,
                  early_stop: bool = False,
                  early_stop_condition: dict = None,
-                 exploration_constant_decay=1,
-                 models: list =None,
-                 stds: list = None):
+                 exploration_constant_decay=1):
 
-        self.models = models
-        self.stds = stds
         super().__init__(mdp, simulation_depth_limit, discount_factor, exploration_constant, verbose, max_iteration, early_stop,
                          early_stop_condition, exploration_constant_decay)
 
@@ -29,8 +25,10 @@ class PuctSolver(ProgressiveWideningSolver):
         current_node = node
 
         while True:
-            current_node.valid_actions = self.mdp.actions(current_node.state, current_node.n, iteration_number,
-                                                          self.max_iteration)
+            if current_node.n % 50 == 49:
+                current_node.valid_actions = self.mdp.actions(current_node.state, current_node.n, iteration_number,
+                                                              self.max_iteration, dpw_exploration=self.dpw_exploration,
+                                                              dpw_alpha=self.dpw_alpha)
             # If the node is terminal, return it
             if self.mdp.is_terminal(current_node.state):
                 return current_node
@@ -41,43 +39,23 @@ class PuctSolver(ProgressiveWideningSolver):
                 return current_node
 
             # This state has been explored, select best action
+
             current_node = max(current_node.children, key=lambda c: self.calculate_puct(c))
 
-    # def calculate_puct(self, node:TNode):
-    #
-    #     # use the loaded model to make predictions
-    #
-    #     try:
-    #         probability = self.probabilities[node.state.port, node.inducing_action.refuel_amount].values[0]
-    #     except KeyError:
-    #         probability = 0.001
-    #     puct_constant = self.exploration_constant*probability
-    #     parentN = node.parent.n if node.parent !=None else node.n
-    #     return self.calculate_uct_impl(parentN, node.n, node.reward, puct_constant)
-    #
-    def calculate_puct(self, node: TNode):
 
-        # use the loaded model to make predictions
-
-
-        port = node.state.port
-        std = self.stds[port]
-        model = self.models[port]
-        value = [node.state.price, node.state.fuel_amount]
-        prediction = model.predict(np.array(value).reshape(1, -1))
-        ref_am = node.inducing_action.refuel_amount
-        if ref_am == 0:
-            prob = 0.5
-        elif prediction * (1 - std * 0.5) < node.inducing_action.refuel_amount <= prediction * (1 + std * 0.5):
-            prob = 0.4
-        elif prediction * (1 - std) < node.inducing_action.refuel_amount <= prediction * (1 + std):
-            prob = 0.2
-        elif prediction * (1 - std * 1.5) < node.inducing_action.refuel_amount <= prediction * (1 + std * 1.5):
-            prob = 0.1
-        elif prediction * (1 - std * 3) < node.inducing_action.refuel_amount <= prediction * (1 + std * 3):
-            prob = 0.05
+    def calculate_puct(self, node):
+        if node.parent is None:
+            if node.inducing_action.refuel_amount > 100:
+                prob = 0.2
+            elif node.inducing_action.refuel_amount > 50:
+                prob = 0.3
+            else:
+                prob = 1
+        elif node.parent.state.fuel_amount < 30 and node.inducing_action.refuel_amount > 70:
+            prob = 1
         else:
-            prob = 0.01
+            prob = 0.5
+
         puct_constant = self.exploration_constant * prob
         parentN = node.parent.n if node.parent != None else node.n
         return self.calculate_uct_impl(parentN, node.n, node.reward, puct_constant)

@@ -63,17 +63,19 @@ class PuctWithDPWSolver(DPWSolver):
                 if self.mdp.is_terminal(current_node.state):
                     return current_node
 
-    def calculate_puct(self, node: TNode):
+    def calculate_puct(self, node):
+        if node.parent is None:
+            if node.inducing_action.refuel_amount > 100:
+                prob = 0.2
+            elif node.inducing_action.refuel_amount > 50:
+                prob = 0.3
+            else:
+                prob = 1
+        elif node.parent.state.fuel_amount < 30 and node.inducing_action.refuel_amount > 70:
+            prob = 1
+        else:
+            prob = 0.5
 
-        # use the loaded model to make predictions
-
-        try:
-            probability = self.probabilities[node.state.port, node.inducing_action.refuel_amount]
-        except KeyError:
-            probability = 0.001
-        probability = 1
-        if node.inducing_action.refuel_amount == 0:
-            probability = 10000
-        puct_constant = self.exploration_constant * probability
+        puct_constant = self.exploration_constant * prob
         parentN = node.parent.n if node.parent != None else node.n
         return self.calculate_uct_impl(parentN, node.n, node.reward, puct_constant)
