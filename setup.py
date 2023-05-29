@@ -21,3 +21,8 @@ setup(
 # https://gist.github.com/wjladams/f00d6c590a4384ad2a92bf9c53f6b794
 # python3 -m pip install --index-url https://test.pypi.org/simple/ mcts4py-0.13
 # pip install git+https://github.com/aqtech-ca/mcts4py@larkin/checks
+
+# to pypi
+# rm -r dist/*; python setup.py sdist bdist_wheel; twine upload --repository testpypi dist/*
+
+
