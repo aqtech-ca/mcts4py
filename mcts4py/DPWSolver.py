@@ -29,9 +29,9 @@ class DPWSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic
         # self.selection_time = 0
         # self.backp_time = 0
         # self.expansion_time = 0
-        # self.time1 = 0
-        # self.time2 = 0
-        # self.time3 = 0
+        self.time1 = 0
+        self.time2 = 0
+        self.time3 = 0
         # self.simulation_time = 0
         self.mdp = mdp
         self.simulation_depth_limit = simulation_depth_limit
