@@ -5,7 +5,7 @@ _tests_require = ["pytest", "hypothesis", "pytest-benchmark"]
 
 setup(
     name="mcts4py",
-    version=0.20,
+    version='0.20.2',
     packages=find_packages(exclude="tests"),
     tests_require=_tests_require,
     extras_require={"tests": _tests_require, "drawing": ["python-igraph"]},
@@ -20,5 +20,9 @@ setup(
 
 # https://gist.github.com/wjladams/f00d6c590a4384ad2a92bf9c53f6b794
 # python3 -m pip install --index-url https://test.pypi.org/simple/ mcts4py-0.13
-
 # pip install git+https://github.com/aqtech-ca/mcts4py@larkin/checks
+
+# to pypi
+# rm -r dist/*; python setup.py sdist bdist_wheel; twine upload --repository testpypi dist/*
+
+
