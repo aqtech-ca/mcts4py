@@ -26,9 +26,12 @@ class PuctWithDPWSolver(DPWSolver):
                  early_stop_condition: dict = None,
                  exploration_constant_decay=1,
                  dpw_exploration=1,
-                 dpw_alpha=1):
-        self.probabilities = pd.read_csv('lr_models/probabilities.csv', index_col=0)
-        self.probabilities.set_index(['port', 'refuel_amount'], inplace=True)
+                 dpw_alpha=1,
+                 probabilities=None):
+        
+        self.probabilities = probabilities
+        # self.probabilities = pd.read_csv('lr_models/probabilities.csv', index_col=0)
+        # self.probabilities.set_index(['port', 'refuel_amount'], inplace=True)
         super().__init__(mdp, simulation_depth_limit, discount_factor, exploration_constant, verbose, max_iteration,
                          early_stop, early_stop_condition, exploration_constant_decay, dpw_exploration, dpw_alpha)
 
