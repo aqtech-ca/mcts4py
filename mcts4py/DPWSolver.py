@@ -17,11 +17,13 @@ class DPWSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic
                  exploration_constant_decay=1,
                  dpw_exploration: float = None,
                  dpw_alpha: float = None,
-                 max_random_states: float = None,
-                 probabilistic: bool =True):
+                 max_random_states: float = math.inf,
+                 probabilistic: bool =True,
+                 pw_refresh_frequency= 10):
         self.mdp = mdp
         self.simulation_depth_limit = simulation_depth_limit
         self.discount_factor = discount_factor
+        self.pw_refresh_frequency = pw_refresh_frequency
         super().__init__(exploration_constant, verbose, max_iteration, early_stop, early_stop_condition,
                          exploration_constant_decay)
         self.dpw_exp = dpw_exploration
@@ -60,7 +62,7 @@ class DPWSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic
                         current_node = np.random.choice(current_node.children, p=probabilities)
                     else:
                         current_node = max(current_node.children, key=lambda c: self.calculate_uct(c))
-            if current_node.n % 50 == 49:
+            if current_node.n % self.pw_refresh_frequency == self.pw_refresh_frequency - 1:
                 current_node.valid_actions = self.mdp.actions(current_node.state, current_node.n + 1,
                                                               dpw_exploration=self.dpw_exp,
                                                               dpw_alpha=self.dpw_alpha)
