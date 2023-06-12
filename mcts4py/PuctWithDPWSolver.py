@@ -22,6 +22,7 @@ class PuctWithDPWSolver(DPWSolver):
                  probabilistic=True,
                  pw_refresh_frequency=10,
                  probabilities: pd.DataFrame =None):
+        
         super().__init__(mdp, simulation_depth_limit, discount_factor, exploration_constant, verbose, max_iteration,
                          early_stop, early_stop_condition, exploration_constant_decay, dpw_exploration, dpw_alpha, max_random_states, probabilistic, pw_refresh_frequency)
         self.probabilities = probabilities  # probabilities table has to have the node as the index column
