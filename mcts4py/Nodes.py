@@ -11,9 +11,8 @@ TNode = TypeVar("TNode", bound="Node")
 class Node(ABC, Generic[TAction]):
 
     def __init__(self: TNode,
-        parent: Optional[TNode] = None,
-        inducing_action: Optional[TAction] = None):
-
+                 parent: Optional[TNode] = None,
+                 inducing_action: Optional[TAction] = None):
         self.inducing_action = inducing_action
         self.depth = 0 if parent is None else parent.depth + 1
         self.n = 0
@@ -39,12 +38,14 @@ TStateNode = TypeVar("TStateNode", bound="StateNode")
 class StateNode(Generic[TState, TAction], Node[TAction]):
 
     def __init__(self,
-        parent: Optional[TStateNode] = None,
-        inducing_action: Optional[TAction] = None,
-        state: Optional[TState] = None,
-        valid_actions: list[TAction] = [],
-        is_terminal: bool = False):
+                 parent: Optional[TStateNode] = None,
+                 inducing_action: Optional[TAction] = None,
+                 state: Optional[TState] = None,
+                 valid_actions=None,
+                 is_terminal: bool = False):
 
+        if valid_actions is None:
+            valid_actions = []
         self.parent = parent
         self._children: MutableMapping[TAction, TStateNode] = dict()
         self._state = state
@@ -57,7 +58,7 @@ class StateNode(Generic[TState, TAction], Node[TAction]):
         return self.parent
 
     def add_child(self: TStateNode, child: TStateNode) -> None:
-        if child.inducing_action == None:
+        if child.inducing_action is None:
             raise Exception("Inducing action must be set on child")
         if child.inducing_action in self._children.keys():
             raise Exception("A child with the same inducing action has already been added")
@@ -82,7 +83,7 @@ class StateNode(Generic[TState, TAction], Node[TAction]):
     def state(self, value: TState) -> None:
         self._state = value
 
-    def get_children_of_action(self: TStateNode, action:TAction) -> list[TStateNode]:
+    def get_children_of_action(self: TStateNode, action: TAction) -> list[TStateNode]:
         if action in self._children:
             return [self._children[action]]
         else:
@@ -101,8 +102,8 @@ TActionNode = TypeVar("TActionNode", bound="ActionNode")
 class ActionNode(Generic[TState, TAction], Node[TAction]):
 
     def __init__(self,
-        parent: Optional[TActionNode] = None,
-        inducing_action: Optional[TAction] = None):
+                 parent: Optional[TActionNode] = None,
+                 inducing_action: Optional[TAction] = None):
 
         self.parent = parent
         self.__children: list[TActionNode] = []
@@ -113,7 +114,7 @@ class ActionNode(Generic[TState, TAction], Node[TAction]):
 
     @property
     def state(self) -> TState:
-        if self.__state == None:
+        if self.__state is None:
             raise RuntimeError(f"Simulation not run at depth: {self.depth}")
         return self.__state
 
@@ -123,7 +124,7 @@ class ActionNode(Generic[TState, TAction], Node[TAction]):
 
     @property
     def valid_actions(self) -> list[TAction]:
-        if self.__valid_actions == None:
+        if self.__valid_actions is None:
             raise RuntimeError(f"Simulation not run")
         return self.__valid_actions
 
@@ -141,7 +142,7 @@ class ActionNode(Generic[TState, TAction], Node[TAction]):
     def add_child(self: TActionNode, child: TActionNode) -> None:
         self.__children.append(child)
 
-    def get_children_of_action(self: TActionNode, action: TAction) -> Optional[TActionNode]:
+    def get_children_of_action(self: TActionNode, action: TAction) -> [TActionNode]:
         return [child for child in self.__children if child.inducing_action == action]
 
     def __str__(self):
@@ -174,7 +175,7 @@ class NewNode(ABC, Generic[TRandom, TAction]):
 
     @property
     def state(self) -> TState:
-        if self._state == None:
+        if self._state is None:
             raise RuntimeError(f"Simulation not run at depth: {self.depth}")
         return self._state
 
@@ -200,16 +201,16 @@ class NewNode(ABC, Generic[TRandom, TAction]):
     def __eq__(self, other: TNode):
         if other is None:
             return False
-        return (self.state == other.state) and (self.inducing == other.inducing) and (self._parent == other.parent)
+        return (self.state == other.state) and (self.inducing_action == other.inducing) and (self._parent == other.parent)
 
     def __str__(self):
-        return f"Node: {self.state} Inducing Action: {self.inducing}"
+        return f"Node: {self.state} Inducing Action: {self.inducing_action}"
 
     @property
     def name(self):
         if self.inducing_action is None:
-            return f'None_{self._state.port}'
-        return f'{int(self.state.fuel_amount)}_{self.inducing_action.name}_{self.state.port}'
+            return f'None_{self._state}'
+        return f'{self.state}_{self.inducing_action}'
 
 
 class RandomNode(Generic[TAction, TRandom, TDecisionNode], NewNode[TAction, TRandom]):
@@ -220,21 +221,18 @@ class RandomNode(Generic[TAction, TRandom, TDecisionNode], NewNode[TAction, TRan
                  state: Optional[TState] = None,
                  is_terminal: bool = False):
         self._children: list[TDecisionNode] = []
-        self._children_states: list =[]
+        self._children_states: list = []
         super().__init__(parent, inducing, state, is_terminal)
 
     @property
     def children(self: TRandomNode) -> list[TDecisionNode]:
         return self._children
 
-    @property
-    def seed(self):
-        return self._seed
-
     def add_child(self: TRandomNode, child: TDecisionNode) -> None:
-        if child.inducing_action == None:
+        if child.inducing_action is None:
             raise Exception("Inducing action must be set on child")
-        if child.state in [ch.state for ch in self._children]: # We dont check inducing actions because they are always the same with the parent. since the inducing action of a decision node is the same as its parent.
+        if child.state in [ch.state for ch in
+                           self._children]:  # We dont check inducing actions because they are always the same with the parent. since the inducing action of a decision node is the same as its parent.
             raise Exception("A child with the same state has already been added")
         self._children.append(child)
         self._children_states.append(child.state)
@@ -249,7 +247,7 @@ class RandomNode(Generic[TAction, TRandom, TDecisionNode], NewNode[TAction, TRan
                 return child
 
     def __str__(self):
-        return f'Inducing: {self.inducing}, State: {self.state}, Seed: {self._seed}'
+        return f'Inducing: {self.inducing_action}, State: {self.state}'
 
     # def __eq__(self, other):
     #     return (self.price == other.price) and (self.state == other.state)
@@ -275,15 +273,15 @@ class DecisionNode(Generic[TAction, TRandom], NewNode[TAction, TRandom]):
         return [ch.inducing_action for ch in self._children]
 
     def add_child(self: TDecisionNode, child: TRandomNode) -> None:
-        if child.inducing_action == None:
+        if child.inducing_action is None:
             raise Exception("Inducing action must be set on child")
-        if child.state in [ch.state for ch in self._children] and child.inducing_action in[ch.inducing_action for ch in self.children]:
+        if child.state in [ch.state for ch in self._children] and child.inducing_action in [ch.inducing_action for ch in self.children]:
             raise Exception("A child with the same state has already been added")
         self._children.append(child)
 
     @property
     def valid_actions(self) -> list[TAction]:
-        if self._valid_actions == None:
+        if self._valid_actions is None:
             raise RuntimeError(f"Simulation not run")
         return self._valid_actions
 

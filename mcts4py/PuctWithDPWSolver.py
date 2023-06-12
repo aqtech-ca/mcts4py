@@ -1,3 +1,5 @@
+import math
+
 from mcts4py.DPWSolver import *
 from mcts4py.MDP import *
 
@@ -15,53 +17,67 @@ class PuctWithDPWSolver(DPWSolver):
                  early_stop_condition: dict = None,
                  exploration_constant_decay=1,
                  dpw_exploration=1,
-                 dpw_alpha=1):
+                 dpw_alpha=1,
+                 max_random_states=math.inf,
+                 probabilistic=True,
+                 pw_refresh_frequency=10,
+                 probabilities: pd.DataFrame =None):
         super().__init__(mdp, simulation_depth_limit, discount_factor, exploration_constant, verbose, max_iteration,
-                         early_stop, early_stop_condition, exploration_constant_decay, dpw_exploration, dpw_alpha)
+                         early_stop, early_stop_condition, exploration_constant_decay, dpw_exploration, dpw_alpha, max_random_states, probabilistic, pw_refresh_frequency)
+        self.probabilities = probabilities  # probabilities table has to have the node as the index column
 
     def select(self, node: DecisionNode[TRandom, TAction], iteration_number: int = None) -> NewNode[
         TAction, TRandom]:
         current_node = node
+        counter = 0
         while True:
+            counter += 1
             if self.mdp.is_terminal(current_node.state):
                 return current_node
             if isinstance(current_node, RandomNode):
-                next_state = self.mdp.transition(current_node.state, current_node.inducing_action)
-                if next_state in current_node.children_states:
-                    current_node = current_node.child_with_specific_state(next_state)
+                a = (current_node.n + 0.01) ** self.dpw_alpha
+                kPrime = math.ceil(self.dpw_exp * a)
+                if kPrime > len(current_node.children) and len(current_node.children) < self.max_random_states:
+                    new_state = self.mdp.transition(current_node.state, current_node.inducing_action)
+                    if new_state in [ch.state for ch in current_node.children]:
+                        for ch in current_node.children:
+                            if ch.state == new_state:
+                                current_node = ch
+                                break
+                    else:
+                        current_node = self.create_node(current_node, current_node.inducing_action, new_state)
                 else:
-                    current_node = self.create_node(current_node, current_node.inducing_action, next_state)
-                # valid_actions = self.mdp.actions(next_state,0)
-                # current_node = DecisionNode(current_node, current_node.inducing_action, next_state, valid_actions,
-                #                       self.mdp.is_terminal(next_state))
-            t = current_node.n + 1
-            pos_actions = self.mdp.actions(current_node.state, t, dpw_alpha=self.dpw_alpha,
-                                           dpw_exploration=self.dpw_exp)
-            for act in pos_actions:
-                if act not in current_node.explored_actions():
-                    chosen_action = act
-                    new_child = self.create_node(current_node, chosen_action, current_node.state)
-                    chosen_child = new_child
-                    return chosen_child
+                    if self.probabilistic:
+                        children_visits = [ch.n for ch in current_node.children]
+                        probabilities = [v / sum(children_visits) for v in children_visits]
+                        current_node = np.random.choice(current_node.children, p=probabilities)
+                    else:
+                        current_node = max(current_node.children, key=lambda c: self.calculate_puct(c))
+            if current_node.n % self.pw_refresh_frequency == self.pw_refresh_frequency - 1:
+                current_node.valid_actions = self.mdp.actions(current_node.state, current_node.n + 1,
+                                                              dpw_exploration=self.dpw_exp,
+                                                              dpw_alpha=self.dpw_alpha)
+            explored_actions = current_node.explored_actions()
+            if len(explored_actions) < len(current_node.valid_actions):
+                unexplored_actions = [a for a in current_node.valid_actions if a not in explored_actions]
+                action_taken = random.choice(unexplored_actions)
+                new_child = self.create_node(current_node, action_taken, current_node.state)
+                return new_child
             try:
                 current_node = max(current_node.children, key=lambda c: self.calculate_puct(c))
             except ValueError:
                 if self.mdp.is_terminal(current_node.state):
                     return current_node
+                else:  # If the current valid actions are not producing any valid actions expand the actions space
+                    current_node.valid_actions = self.mdp.actions(current_node.state, current_node.n + 1,
+                                                                  dpw_exploration=self.dpw_exp * counter * counter * 2,
+                                                                  dpw_alpha=self.dpw_alpha * 2)
+
+    def expand(self, node: TNode) -> TNode:
+        return node
 
     def calculate_puct(self, node):
-        if node.parent is None:
-            if node.inducing_action.refuel_amount > 100:
-                prob = 0.2
-            elif node.inducing_action.refuel_amount > 50:
-                prob = 0.3
-            else:
-                prob = 1
-        elif node.parent.state.fuel_amount < 30 and node.inducing_action.refuel_amount > 70:
-            prob = 1
-        else:
-            prob = 0.5
-
+        prob = self.probabilities.loc[node]
         puct_constant = self.exploration_constant * prob
         parentN = node.parent.n if node.parent != None else node.n
         return self.calculate_uct_impl(parentN, node.n, node.reward, puct_constant)

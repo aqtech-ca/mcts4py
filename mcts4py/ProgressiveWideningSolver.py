@@ -17,10 +17,12 @@ class ProgressiveWideningSolver(StatefulSolver):
                  early_stop_condition: dict = None,
                  exploration_constant_decay: float = 1.0,
                  dpw_exploration: float = None,
-                 dpw_alpha: float = None
+                 dpw_alpha: float = None,
+                 pw_action_refresh_frequency = 10
                  ):
         self.dpw_exploration = dpw_exploration
         self.dpw_alpha = dpw_alpha
+        self.pw_action_refresh_frequency = pw_action_refresh_frequency
         super().__init__(mdp, simulation_depth_limit, discount_factor, exploration_constant,
                          verbose, max_iteration, early_stop, early_stop_condition, exploration_constant_decay)
 
@@ -29,7 +31,7 @@ class ProgressiveWideningSolver(StatefulSolver):
         current_node = node
 
         while True:
-            if current_node.n % 50 == 49:
+            if current_node.n % self.pw_action_refresh_frequency == self.pw_action_refresh_frequency - 1:
                 current_node.valid_actions = self.mdp.actions(current_node.state, current_node.n, iteration_number,
                                                               self.max_iteration, dpw_exploration=self.dpw_exploration,
                                                               dpw_alpha=self.dpw_alpha)
