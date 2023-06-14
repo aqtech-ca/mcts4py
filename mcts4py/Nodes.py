@@ -70,9 +70,9 @@ class StateNode(Generic[TState, TAction], Node[TAction]):
     @property
     def name(self):
         if self.inducing_action is not None:
-            return f'{self.inducing_action.name}_{self._state.port}'
+            return f'{self.inducing_action.name}_{self._state}'
         else:
-            return f'None_{self._state.port}'
+            return f'None_{self._state}'
 
     @property
     def state(self) -> TState:
@@ -208,8 +208,8 @@ class NewNode(ABC, Generic[TRandom, TAction]):
     @property
     def name(self):
         if self.inducing_action is None:
-            return f'None_{self._state.port}'
-        return f'{int(self.state.fuel_amount)}_{self.inducing_action.name}_{self.state.port}'
+            return f'None_{self._state}'
+        return f'{int(self.state.fuel_amount)}_{self.inducing_action.name}_{self.state}'
 
 
 class RandomNode(Generic[TAction, TRandom, TDecisionNode], NewNode[TAction, TRandom]):

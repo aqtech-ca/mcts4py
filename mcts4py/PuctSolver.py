@@ -42,19 +42,7 @@ class PuctSolver(ProgressiveWideningSolver):
 
             # This state has been explored, select best action
             current_node = max(current_node.children, key=lambda c: self.calculate_puct(c))
-
-    # def calculate_puct(self, node:TNode):
-    #
-    #     # use the loaded model to make predictions
-    #
-    #     try:
-    #         probability = self.probabilities[node.state.port, node.inducing_action.refuel_amount].values[0]
-    #     except KeyError:
-    #         probability = 0.001
-    #     puct_constant = self.exploration_constant*probability
-    #     parentN = node.parent.n if node.parent !=None else node.n
-    #     return self.calculate_uct_impl(parentN, node.n, node.reward, puct_constant)
-    #
+    
     def calculate_puct(self, node: TNode):
 
         # use the loaded model to make predictions
