@@ -3,6 +3,7 @@ from enum import Enum
 from mcts4py.MDP import *
 import random
 import numpy as np
+from mcts4py.StatefulSolver import *
 
 class GridworldAction(Enum):
     UP = 1
@@ -129,6 +130,9 @@ class GridworldMDP(MDP[GridworldState, GridworldAction]):
                 raise Exception("No valid neighbours exist")
 
     def actions(self, state: GridworldState) -> list[GridworldAction]:
+        if isinstance(state, StateNode):
+            state = state.state
+
         return [a for a in GridworldAction if state.is_neighbour_valid(a, self.x_size, self.y_size)]
 
     # Utilities

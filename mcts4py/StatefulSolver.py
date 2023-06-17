@@ -34,7 +34,7 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
         current_node = node
 
         while True:
-            current_node.valid_actions = self.mdp.actions(current_node, current_node.n)
+            current_node.valid_actions = self.mdp.actions(current_node)
             # If the node is terminal, return it
             if self.mdp.is_terminal(current_node.state):
                 return current_node
@@ -45,7 +45,7 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
                 return current_node
 
             # This state has been explored, select best action
-            current_node = max(current_node.get_children(), key=lambda c: self.calculate_uct(c))
+            current_node = max(current_node.children, key=lambda c: self.calculate_uct(c))
 
     def expand(self, node: StateNode[TState, TAction], iteration_number = None) -> StateNode[TState, TAction]:
         # If the node is terminal, return it
@@ -100,8 +100,7 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
     #             if self.verbose:
     #                 print(f"-> Depth limit reached: {reward}")
     #             return reward
-    def simulate(self, node: ActionNode[TState, TAction], depth=0, iteration_number =None) -> (
-            float, ActionNode[TState, TAction]):
+    def simulate(self, node: ActionNode[TState, TAction], depth=0, iteration_number =None) -> (float, ActionNode[TState, TAction]):
         if self.verbose:
             print("Simulation:")
         reward = 0
@@ -111,7 +110,7 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
             while temp_node.parent != None:
                 discount = self.discount_factor ** (depth + i)
                 i += 1
-                reward += self.mdp.reward(temp_node.parent.state, temp_node.inducing_action) * discount
+                reward += self.mdp.reward(temp_node.parent.state, temp_node.inducing_action, temp_node.state) * discount
                 temp_node = temp_node.parent
         if self.mdp.is_terminal(node.state):
             if self.verbose:
@@ -121,12 +120,12 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
 
         current_state = node.state
         discount = self.discount_factor ** depth
-        valid_actions = self.mdp.actions(current_state, node.n)
+        valid_actions = self.mdp.actions(current_state)
         random_action = random.choice(valid_actions)
         new_state = self.mdp.transition(current_state, random_action)
 
         if self.mdp.is_terminal(new_state):
-            reward += self.mdp.reward(current_state, random_action) * discount
+            reward += self.mdp.reward(current_state, random_action, new_state) * discount
             if self.verbose:
                 print(f"-> Terminal state reached: {reward}")
             return reward
@@ -134,13 +133,13 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
         ## Causing the loop to finish before all rewards are realized.
 
         if depth > self.simulation_depth_limit:
-            reward += self.mdp.reward(current_state, random_action) * discount
+            reward += self.mdp.reward(current_state, random_action, new_state) * discount
             if self.verbose:
                 print(f"-> Depth limit reached: {reward}")
             return reward
         next_node = ActionNode(node, random_action)
         next_node.state = new_state
-        reward += self.mdp.reward(current_state, random_action) * discount
+        reward += self.mdp.reward(current_state, random_action, new_state) * discount
         reward += self.simulate(next_node, depth=depth + 1)
         return reward
 
@@ -159,7 +158,7 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
     def create_node(self, parent: Optional[StateNode[TState, TAction]], inducing_action: Optional[TAction],
                     state: TState, number_of_visits=0) -> StateNode[TState, TAction]:
 
-        valid_actions = self.mdp.actions(state, number_of_visits)
+        valid_actions = self.mdp.actions(state)
         is_terminal = self.mdp.is_terminal(state)
         state_node = StateNode(parent, inducing_action, state, valid_actions, is_terminal)
 
