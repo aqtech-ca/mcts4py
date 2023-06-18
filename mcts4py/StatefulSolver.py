@@ -64,84 +64,42 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
 
         new_state = self.mdp.transition(node.state, action_taken)
         return self.create_node(node, action_taken, new_state, node.n)
-
-    # def simulate(self, node: StateNode[TState, TAction]) -> float:
-    #     if self.verbose:
-    #         print("Simulation:")
-    #
-    #     if node.is_terminal:
-    #         if self.verbose:
-    #             print("Terminal state reached")
-    #         parent = node.get_parent()
-    #         parent_state = parent.state if parent != None else None
-    #         return self.mdp.reward(parent_state, node.inducing_action, node.state)
-    #
-    #     depth = 0
-    #     current_state = node.state
-    #     discount = self.discount_factor
-    #
-    #     while True:
-    #         valid_actions = self.mdp.actions(current_state)
-    #         random_action = random.choice(valid_actions)
-    #         new_state = self.mdp.transition(current_state, random_action)
-    #
-    #         if self.mdp.is_terminal(new_state):
-    #             reward = self.mdp.reward(current_state, random_action, new_state) * discount
-    #             if self.verbose:
-    #                 print(f"-> Terminal state reached: {reward}")
-    #             return reward
-    #
-    #         current_state = new_state
-    #         depth += 1
-    #         discount *= self.discount_factor
-    #
-    #         if depth > self.simulation_depth_limit:
-    #             reward = self.mdp.reward(current_state, random_action, new_state) * discount
-    #             if self.verbose:
-    #                 print(f"-> Depth limit reached: {reward}")
-    #             return reward
-    def simulate(self, node: ActionNode[TState, TAction], depth=0, iteration_number =None) -> (float, ActionNode[TState, TAction]):
+    
+    def simulate(self, node: StateNode[TState, TAction]) -> float:
         if self.verbose:
             print("Simulation:")
-        reward = 0
-        if depth == 0:
-            temp_node = copy.copy(node)
-            i = 0
-            while temp_node.parent != None:
-                discount = self.discount_factor ** (depth + i)
-                i += 1
-                reward += self.mdp.reward(temp_node.parent.state, temp_node.inducing_action, temp_node.state) * discount
-                temp_node = temp_node.parent
-        if self.mdp.is_terminal(node.state):
+
+        if node.is_terminal:
             if self.verbose:
                 print("Terminal state reached")
-            # reward += self.mdp.reward(parent_state, node.inducing_action, node.state) # ALREADY INCLUDED UPPER
-            return reward
+            parent = node.get_parent()
+            parent_state = parent.state if parent != None else None
+            return self.mdp.reward(parent_state, node.inducing_action, node.state)
 
+        depth = 0
         current_state = node.state
-        discount = self.discount_factor ** depth
-        valid_actions = self.mdp.actions(current_state)
-        random_action = random.choice(valid_actions)
-        new_state = self.mdp.transition(current_state, random_action)
+        discount = self.discount_factor
 
-        if self.mdp.is_terminal(new_state):
-            reward += self.mdp.reward(current_state, random_action, new_state) * discount
-            if self.verbose:
-                print(f"-> Terminal state reached: {reward}")
-            return reward
+        while True:
+            valid_actions = self.mdp.actions(current_state)
+            random_action = random.choice(valid_actions)
+            new_state = self.mdp.transition(current_state, random_action)
 
-        ## Causing the loop to finish before all rewards are realized.
+            if self.mdp.is_terminal(new_state):
+                reward = self.mdp.reward(current_state, random_action, new_state) * discount
+                if self.verbose:
+                    print(f"-> Terminal state reached: {reward}")
+                return reward
 
-        if depth > self.simulation_depth_limit:
-            reward += self.mdp.reward(current_state, random_action, new_state) * discount
-            if self.verbose:
-                print(f"-> Depth limit reached: {reward}")
-            return reward
-        next_node = ActionNode(node, random_action)
-        next_node.state = new_state
-        reward += self.mdp.reward(current_state, random_action, new_state) * discount
-        reward += self.simulate(next_node, depth=depth + 1)
-        return reward
+            current_state = new_state
+            depth += 1
+            discount *= self.discount_factor
+
+            if depth > self.simulation_depth_limit:
+                reward = self.mdp.reward(current_state, random_action, new_state) * discount
+                if self.verbose:
+                    print(f"-> Depth limit reached: {reward}")
+                return reward
 
     def backpropagate(self, node: StateNode[TState, TAction], reward: float) -> None:
         current_state_node = node
