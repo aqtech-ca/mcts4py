@@ -108,6 +108,7 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
                 reward = self.mdp.reward(current_state, random_action, new_state) * discount
                 if self.verbose:
                     print(f"-> Depth limit reached: {reward}")
+                return reward
 
     def backpropagate(self, node: StateNode[TState, TAction], reward: float) -> None:
         current_state_node = node
