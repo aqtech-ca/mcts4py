@@ -123,7 +123,7 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
 
     def create_node(self, parent: Optional[StateNode[TState, TAction]], inducing_action: Optional[TAction],
                     state: TState, number_of_visits=0) -> StateNode[TState, TAction]:
-
+        
         valid_actions = self.mdp.actions(state)
         is_terminal = self.mdp.is_terminal(state)
         state_node = StateNode(parent, inducing_action, state, valid_actions, is_terminal)
