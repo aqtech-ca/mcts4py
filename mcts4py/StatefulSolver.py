@@ -18,10 +18,12 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
                  max_iteration: int = 1000,
                  early_stop: bool = False,
                  early_stop_condition: dict = None,
-                 exploration_constant_decay = 1):
+                 exploration_constant_decay = 1,
+                 value_function_estimator_callback = None):
         self.mdp = mdp
         self.simulation_depth_limit = simulation_depth_limit
         self.discount_factor = discount_factor
+        self.value_function_estimator_callback = value_function_estimator_callback
 
         super().__init__(exploration_constant, verbose, max_iteration,
                          early_stop, early_stop_condition, exploration_constant_decay)
@@ -34,7 +36,7 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
         current_node = node
 
         while True:
-            current_node.valid_actions = self.mdp.actions(current_node)
+            current_node.valid_actions = self.mdp.actions(current_node.state)
             # If the node is terminal, return it
             if self.mdp.is_terminal(current_node.state):
                 return current_node
@@ -76,6 +78,13 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
             parent_state = parent.state if parent != None else None
             return self.mdp.reward(parent_state, node.inducing_action, node.state)
 
+        if self.value_function_estimator_callback is None:
+            return self.simulate_by_simulation(node)
+        else:
+            # value_function_estimator_callback() will receive a StateNode object.
+            return self.value_function_estimator_callback(node)
+    
+    def simulate_by_simulation(self, node):
         depth = 0
         current_state = node.state
         discount = self.discount_factor
@@ -99,7 +108,6 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
                 reward = self.mdp.reward(current_state, random_action, new_state) * discount
                 if self.verbose:
                     print(f"-> Depth limit reached: {reward}")
-                return reward
 
     def backpropagate(self, node: StateNode[TState, TAction], reward: float) -> None:
         current_state_node = node
