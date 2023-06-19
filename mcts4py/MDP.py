@@ -27,6 +27,6 @@ class MDP(ABC, Generic[TState, TAction]):
         raise NotImplementedError
 
     @abstractmethod
-    def actions(self, state: TState, state_visit, iteration_number=0, max_iteration_number=0, dpw_exploration=1,
+    def actions(self, state: TState, state_visit=0, iteration_number=0, max_iteration_number=0, dpw_exploration=1,
                 dpw_alpha=1, min_action = False) -> list[TAction]:
         raise NotImplementedError
