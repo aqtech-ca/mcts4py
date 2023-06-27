@@ -11,7 +11,6 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
 
     def __init__(self,
                  mdp: MDP[TState, TAction],
-                 simulation_depth_limit: int,
                  discount_factor: float,
                  exploration_constant: float,
                  verbose: bool = False,
@@ -21,7 +20,6 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
                  exploration_constant_decay = 1,
                  value_function_estimator_callback = None):
         self.mdp = mdp
-        self.simulation_depth_limit = simulation_depth_limit
         self.discount_factor = discount_factor
         self.value_function_estimator_callback = value_function_estimator_callback
 
@@ -104,6 +102,7 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
             depth += 1
             discount *= self.discount_factor
 
+            # statefulsolver, state should have a terminal check, in the state itself (ie last port in the schedule)
             if depth > self.simulation_depth_limit:
                 reward = self.mdp.reward(current_state, random_action, new_state) * discount
                 if self.verbose:
