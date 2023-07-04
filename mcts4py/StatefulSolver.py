@@ -18,10 +18,12 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
                  early_stop: bool = False,
                  early_stop_condition: dict = None,
                  exploration_constant_decay = 1,
-                 value_function_estimator_callback = None):
+                 value_function_estimator_callback = None,
+                 alpha_value = 0.5):
         self.mdp = mdp
         self.discount_factor = discount_factor
         self.value_function_estimator_callback = value_function_estimator_callback
+        self.alpha_value = alpha_value
 
         super().__init__(exploration_constant, verbose, max_iteration,
                          early_stop, early_stop_condition, exploration_constant_decay)
@@ -76,11 +78,15 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
             parent_state = parent.state if parent != None else None
             return self.mdp.reward(parent_state, node.inducing_action, node.state)
 
+        use_value_approx = np.random.uniform(0, 1) > self.alpha_value
         if self.value_function_estimator_callback is None:
             return self.simulate_by_simulation(node)
         else:
             # value_function_estimator_callback() will receive a StateNode object.
-            return self.value_function_estimator_callback(node)
+            if use_value_approx:
+                return self.value_function_estimator_callback(node)
+            else:
+                return self.simulate_by_simulation(node)
     
     def simulate_by_simulation(self, node):
         depth = 0
