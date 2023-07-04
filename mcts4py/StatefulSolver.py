@@ -11,6 +11,7 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
 
     def __init__(self,
                  mdp: MDP[TState, TAction],
+                 simulation_depth_limit: int,
                  discount_factor: float,
                  exploration_constant: float,
                  verbose: bool = False,
@@ -22,6 +23,7 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
                  alpha_value = 0.5):
         self.mdp = mdp
         self.discount_factor = discount_factor
+        self.simulation_depth_limit = simulation_depth_limit
         self.value_function_estimator_callback = value_function_estimator_callback
         self.alpha_value = alpha_value
 
