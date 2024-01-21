@@ -1,0 +1,15 @@
+from mcts4py.GenericSolver import GenericSolver
+
+AmMDP1 = AmMDP(K=80,S=80,T=2,r=0)
+
+
+solver = GenericSolver(
+    AmMDP1,
+    simulation_depth_limit = 1000,
+    exploration_constant = 1.0,
+    discount_factor = 1,
+    verbose = True)  
+
+solver.run_search(10)
+
+solver.display_tree()
