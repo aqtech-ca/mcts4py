@@ -15,3 +15,7 @@ To install from PyPI,
 ```
 python3 -m pip install --index-url https://test.pypi.org/simple/ mcts4py
 ```
+
+## Python Versiomn
+
+Requires Python 3.10+.
