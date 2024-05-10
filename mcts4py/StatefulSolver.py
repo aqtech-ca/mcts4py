@@ -5,6 +5,10 @@ from mcts4py.MDP import *
 
 random = random.Random(0)
 import copy
+import inspect
+
+
+accepts_arguments = lambda func, num_args: len(inspect.signature(func).parameters) == num_args
 
 
 class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic[TState, TAction, TRandom]):
@@ -32,7 +36,7 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
         self.value_clipping = value_clipping
         self.value_function_upper_estimator_callback = value_function_upper_estimator_callback
         self.value_function_lower_estimator_callback = value_function_lower_estimator_callback
-
+        
         super().__init__(exploration_constant, verbose, max_iteration,
                          early_stop, early_stop_condition, exploration_constant_decay)
         self.__root_node = self.create_node(None, None, mdp.initial_state())
@@ -75,7 +79,7 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
         new_state = self.mdp.transition(node.state, action_taken)
         return self.create_node(node, action_taken, new_state, node.n)
     
-    def simulate(self, node: StateNode[TState, TAction]) -> float:
+    def simulate(self, node: StateNode[TState, TAction], mc_sim_iter = 10) -> float:
         if self.verbose:
             print("Simulation:")
 
@@ -85,54 +89,64 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
             parent = node.get_parent()
             parent_state = parent.state if parent != None else None
             return self.mdp.reward(parent_state, node.inducing_action, node.state)
-
         
-
         use_value_approx = np.random.uniform(0, 1) > self.alpha_value
         if self.value_function_estimator_callback is None:
-            sim_reward, state_history = self.simulate_by_simulation(node)
+            sim_reward, trajectory_history = self.simulate_by_simulation(node, mc_sim_iter = mc_sim_iter)
         else:
             # value_function_estimator_callback() will receive a StateNode object.
             if use_value_approx:
-                sim_reward, state_history = self.value_function_estimator_callback(node)
+                sim_reward, trajectory_history = self.value_function_estimator_callback(node)
             else:
-                sim_reward, state_history = self.simulate_by_simulation(node)
+                sim_reward, trajectory_history = self.simulate_by_simulation(node, mc_sim_iter = mc_sim_iter)
         
         if self.value_clipping and self.value_function_lower_estimator_callback is not None:
-            sim_reward = np.max(sim_reward, self.value_function_lower_estimator_callback(sim_reward))
+            sim_reward = np.max(sim_reward, self.value_function_lower_estimator_callback(node))
         elif self.value_clipping and self.value_function_upper_estimator_callback is not None:
-            sim_reward = np.min(sim_reward, self.value_function_upper_estimator_callback(sim_reward))
+            if any(param for param in inspect.signature(self.value_function_upper_estimator_callback).parameters.values() if param.name == 'trajectory_history'):
+                sim_reward = np.min(sim_reward, self.value_function_upper_estimator_callback(node, trajectory_history = trajectory_history))
+            else:
+                sim_reward = np.min(sim_reward, self.value_function_upper_estimator_callback(node))
         
         return sim_reward    
     
-    def simulate_by_simulation(self, node):
+    def simulate_by_simulation(self, node, mc_sim_iter = 10):
         depth = 0
         current_state = node.state
         discount = self.discount_factor
-        state_history = [current_state]
+        
+        trajectory_history = []
+        reward_history = []
+        for i in range(mc_sim_iter):
+            state_history = [current_state]
+            while True:
+                valid_actions = self.mdp.actions(current_state)
+                random_action = random.choice(valid_actions)
+                new_state = self.mdp.transition(current_state, random_action)
+                state_history.append(new_state)
 
-        while True:
-            valid_actions = self.mdp.actions(current_state)
-            random_action = random.choice(valid_actions)
-            new_state = self.mdp.transition(current_state, random_action)
-            state_history.append(new_state)
+                if self.mdp.is_terminal(new_state):
+                    reward = self.mdp.reward(current_state, random_action, new_state) * discount
+                    if self.verbose:
+                        print(f"-> Terminal state reached: {reward}")
+                    reward_history.append(reward)
+                    trajectory_history.append(state_history)
+                    break
 
-            if self.mdp.is_terminal(new_state):
-                reward = self.mdp.reward(current_state, random_action, new_state) * discount
-                if self.verbose:
-                    print(f"-> Terminal state reached: {reward}")
-                return reward, state_history
+                current_state = new_state
+                depth += 1
+                discount *= self.discount_factor
 
-            current_state = new_state
-            depth += 1
-            discount *= self.discount_factor
-
-            # statefulsolver, state should have a terminal check, in the state itself (ie last port in the schedule)
-            if depth > self.simulation_depth_limit:
-                reward = self.mdp.reward(current_state, random_action, new_state) * discount
-                if self.verbose:
-                    print(f"-> Depth limit reached: {reward}")
-                return reward, state_history
+                # statefulsolver, state should have a terminal check, in the state itself (ie last port in the schedule)
+                if depth > self.simulation_depth_limit:
+                    reward = self.mdp.reward(current_state, random_action, new_state) * discount
+                    if self.verbose:
+                        print(f"-> Depth limit reached: {reward}")
+                    reward_history.append(reward)
+                    trajectory_history.append(state_history)
+                    break
+        expected_reward = np.mean(reward_history)
+        return expected_reward, trajectory_history
 
     def backpropagate(self, node: StateNode[TState, TAction], reward: float) -> None:
         current_state_node = node

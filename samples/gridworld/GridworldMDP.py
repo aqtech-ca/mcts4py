@@ -49,7 +49,7 @@ class GridworldState(GridworldPosition):
     def __init__(self, x: int, y: int, is_terminal: bool):
         super().__init__(x, y)
         self.is_terminal = is_terminal
-
+    
     def is_neighbour_valid(self, action: GridworldAction, x_size: int, y_size: int) -> bool:
         if action == GridworldAction.UP:
             return self.x > 0
