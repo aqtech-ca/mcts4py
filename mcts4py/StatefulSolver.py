@@ -20,12 +20,18 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
                  early_stop_condition: dict = None,
                  exploration_constant_decay = 1,
                  value_function_estimator_callback = None,
-                 alpha_value = 0.5):
+                 alpha_value = 0.5,
+                 value_clipping: bool = False,
+                 value_function_upper_estimator_callback = None,
+                 value_function_lower_estimator_callback = None):
         self.mdp = mdp
         self.discount_factor = discount_factor
         self.simulation_depth_limit = simulation_depth_limit
         self.value_function_estimator_callback = value_function_estimator_callback
         self.alpha_value = alpha_value
+        self.value_clipping = value_clipping
+        self.value_function_upper_estimator_callback = value_function_upper_estimator_callback
+        self.value_function_lower_estimator_callback = value_function_lower_estimator_callback
 
         super().__init__(exploration_constant, verbose, max_iteration,
                          early_stop, early_stop_condition, exploration_constant_decay)
@@ -80,31 +86,42 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
             parent_state = parent.state if parent != None else None
             return self.mdp.reward(parent_state, node.inducing_action, node.state)
 
+        
+
         use_value_approx = np.random.uniform(0, 1) > self.alpha_value
         if self.value_function_estimator_callback is None:
-            return self.simulate_by_simulation(node)
+            sim_reward, state_history = self.simulate_by_simulation(node)
         else:
             # value_function_estimator_callback() will receive a StateNode object.
             if use_value_approx:
-                return self.value_function_estimator_callback(node)
+                sim_reward, state_history = self.value_function_estimator_callback(node)
             else:
-                return self.simulate_by_simulation(node)
+                sim_reward, state_history = self.simulate_by_simulation(node)
+        
+        if self.value_clipping and self.value_function_lower_estimator_callback is not None:
+            sim_reward = np.max(sim_reward, self.value_function_lower_estimator_callback(sim_reward))
+        elif self.value_clipping and self.value_function_upper_estimator_callback is not None:
+            sim_reward = np.min(sim_reward, self.value_function_upper_estimator_callback(sim_reward))
+        
+        return sim_reward    
     
     def simulate_by_simulation(self, node):
         depth = 0
         current_state = node.state
         discount = self.discount_factor
+        state_history = [current_state]
 
         while True:
             valid_actions = self.mdp.actions(current_state)
             random_action = random.choice(valid_actions)
             new_state = self.mdp.transition(current_state, random_action)
+            state_history.append(new_state)
 
             if self.mdp.is_terminal(new_state):
                 reward = self.mdp.reward(current_state, random_action, new_state) * discount
                 if self.verbose:
                     print(f"-> Terminal state reached: {reward}")
-                return reward
+                return reward, state_history
 
             current_state = new_state
             depth += 1
@@ -115,7 +132,7 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
                 reward = self.mdp.reward(current_state, random_action, new_state) * discount
                 if self.verbose:
                     print(f"-> Depth limit reached: {reward}")
-                return reward
+                return reward, state_history
 
     def backpropagate(self, node: StateNode[TState, TAction], reward: float) -> None:
         current_state_node = node

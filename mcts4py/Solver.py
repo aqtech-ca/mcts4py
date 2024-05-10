@@ -17,7 +17,8 @@ class MCTSSolver(ABC, Generic[TAction, TNode, TRandom]):
                  early_stop=False,
                  early_stop_condition: dict = None,
                  exploration_constant_decay: float = 1.0,
-                 simulation_depth_limit: int = 100):
+                 simulation_depth_limit: int = 100,
+                 ):
         """
         :param exploration_constant:
         :param verbose:
@@ -38,6 +39,7 @@ class MCTSSolver(ABC, Generic[TAction, TNode, TRandom]):
         self.verbose = verbose
         self.exploration_constant_decay = exploration_constant_decay
         self.simulation_depth_limit = simulation_depth_limit
+        
 
     @abstractmethod
     def root(self) -> TNode:
@@ -97,6 +99,8 @@ class MCTSSolver(ABC, Generic[TAction, TNode, TRandom]):
 
         # Simulation
         simulated_reward = self.simulate(expanded)
+        
+        
         if self.verbose:
             print(f"Simulated reward: {simulated_reward}")
 
