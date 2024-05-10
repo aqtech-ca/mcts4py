@@ -96,17 +96,18 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
         else:
             # value_function_estimator_callback() will receive a StateNode object.
             if use_value_approx:
-                sim_reward, trajectory_history = self.value_function_estimator_callback(node)
+                sim_reward = self.value_function_estimator_callback(node)
             else:
                 sim_reward, trajectory_history = self.simulate_by_simulation(node, mc_sim_iter = mc_sim_iter)
         
         if self.value_clipping and self.value_function_lower_estimator_callback is not None:
-            sim_reward = np.max(sim_reward, self.value_function_lower_estimator_callback(node))
+            lower_est = self.value_function_lower_estimator_callback(node)
+            sim_reward = np.max([sim_reward, self.value_function_lower_estimator_callback(node)])
         elif self.value_clipping and self.value_function_upper_estimator_callback is not None:
             if any(param for param in inspect.signature(self.value_function_upper_estimator_callback).parameters.values() if param.name == 'trajectory_history'):
-                sim_reward = np.min(sim_reward, self.value_function_upper_estimator_callback(node, trajectory_history = trajectory_history))
+                sim_reward = np.min([sim_reward, self.value_function_upper_estimator_callback(node, trajectory_history = trajectory_history)])
             else:
-                sim_reward = np.min(sim_reward, self.value_function_upper_estimator_callback(node))
+                sim_reward = np.min([sim_reward, self.value_function_upper_estimator_callback(node)])
         
         return sim_reward    
     
