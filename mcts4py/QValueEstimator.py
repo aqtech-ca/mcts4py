@@ -4,7 +4,7 @@ import torch.optim as optim
 import numpy as np
 import math
 
-LAMBDA_MENTS_DECAY_RATE = 0.5
+LAMBDA_MENTS_DECAY_RATE = 10.5
 ACTION_SPACE_SIZE = 2
 class StateValueNetwork(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
