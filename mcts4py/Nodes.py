@@ -50,6 +50,7 @@ class StateNode(Generic[TState, TAction], Node[TAction]):
         self._state = state
         self.valid_actions = valid_actions
         self.is_terminal = is_terminal
+        self.ments_value = 0.0
 
         super().__init__(parent, inducing_action)
 

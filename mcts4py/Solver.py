@@ -140,7 +140,7 @@ class MCTSSolver(ABC, Generic[TAction, TNode, TRandom]):
 
         print(
             f"{indent} {str(node)} (n: {node.n}, reward: {node.reward / node.n:.3f}, UCT: "
-            f"{self.calculate_uct(node):.3f})")
+            f"{self.calculate_uct(node):.3f}, ments_value: {node.ments_value:.3f})")
 
         children = node.children
 
@@ -162,7 +162,7 @@ class MCTSSolver(ABC, Generic[TAction, TNode, TRandom]):
         with open(path, 'a') as f:
             f.write(
                 f"{indent} {str(node)} (n: {node.n}, reward: {node.reward / node.n:.3f}, UCT: "
-                f"{self.calculate_uct(node):.3f})")
+                f"{self.calculate_uct(node):.3f}, ments_value: {node.ments_value:.3f})")
             f.write('\n')
 
         children = node.children
