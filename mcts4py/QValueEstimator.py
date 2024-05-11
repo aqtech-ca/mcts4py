@@ -32,7 +32,7 @@ def exponential_decay(num_calls, decay_rate=LAMBDA_MENTS_DECAY_RATE):
     result = initial_value * math.exp(-decay_rate * num_calls)
     return result
 class QValueEstimator:
-    def __init__(self, state_dim, action_dim, hidden_dim, alpha=0.1, lambda_temp_callback=exponential_decay, epsilon=0.1):
+    def __init__(self, alpha=0.1, lambda_temp_callback=exponential_decay, action_space_size=ACTION_SPACE_SIZE):
         # self.state_value_net = StateValueNetwork(state_dim, hidden_dim, 1)
         # self.q_net = StateActionValueNetwork(state_dim + action_dim, hidden_dim, 1)
         # self.optimizer_state_value = optim.Adam(self.state_value_net.parameters(), lr=0.001)
@@ -43,7 +43,7 @@ class QValueEstimator:
         self.alpha = alpha
         self.num_calls = 0
         self.lambda_temp_callback = lambda_temp_callback
-        self.action_space_size = ACTION_SPACE_SIZE
+        self.action_space_size = action_space_size
     
     # def predict_state_value(self, state):
     #     state = torch.tensor(state, dtype=torch.float32)
@@ -87,11 +87,15 @@ class QValueEstimator:
     def update_q_value(self, state, action, reward, reward_to_go):
         self.q_val_dict[repr([state, action])] = reward + reward_to_go
     
-    def get_softmax_prob_per_action(self, state, action):
+    def get_softmax_prob_per_action(self, state, action, lambda_temp_term=None):
         q_val = self.get_q_value(state, action)
         state_value = self.get_state_value(state)
         rho_ments = np.exp((1/self.alpha) * (q_val - state_value ))
-        prob_ments = (1 - self.lambda_temp_callback(self.num_calls))*rho_ments + self.lambda_temp_callback(self.num_calls)/self.action_space_size
+        if lambda_temp_term is None:
+            decay_func = self.lambda_temp_callback
+        else:
+            decay_func = lambda x: lambda_temp_term
+        prob_ments = (1 - decay_func(self.num_calls))*rho_ments + decay_func(self.num_calls)/self.action_space_size
         return prob_ments
     
     def get_softmax_prob_multinom(self, state, possible_actions):
@@ -104,15 +108,10 @@ class QValueEstimator:
         # Extract actions and unnormalized probabilities
         actions = list(action_prob_dict.keys())
         unnormalized_probs = list(action_prob_dict.values())
-
-        # Normalize probabilities
         normalized_probs = np.array(unnormalized_probs) / np.sum(unnormalized_probs)
-
-        # Draw from multinomial distribution
         action_index = np.random.multinomial(1, normalized_probs).argmax()
-
         # Return the action corresponding to the drawn index
-        return actions[action_index]
+        return actions[action_index], action_index
     
     # def forward_bellman_update(self, state, action, reward, next_state, done, discount_factor):
     #     next_state_value = self.predict_state_value(next_state).item()

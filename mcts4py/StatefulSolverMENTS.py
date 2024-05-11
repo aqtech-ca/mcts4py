@@ -2,6 +2,7 @@ import random
 from mcts4py.Types import *
 from mcts4py.Solver import *
 from mcts4py.MDP import *
+from mcts4py.QValueEstimator import *
 
 random = random.Random(0)
 import copy
@@ -11,7 +12,7 @@ import inspect
 accepts_arguments = lambda func, num_args: len(inspect.signature(func).parameters) == num_args
 
 
-class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic[TState, TAction, TRandom]):
+class StatefulSolverMENTS(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic[TState, TAction, TRandom]):
 
     def __init__(self,
                  mdp: MDP[TState, TAction],
@@ -36,6 +37,8 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
         self.value_clipping = value_clipping
         self.value_function_upper_estimator_callback = value_function_upper_estimator_callback
         self.value_function_lower_estimator_callback = value_function_lower_estimator_callback
+
+        self.q_estimator = QValueEstimator(alpha=alpha_value)
         
         super().__init__(exploration_constant, verbose, max_iteration,
                          early_stop, early_stop_condition, exploration_constant_decay)
@@ -59,7 +62,12 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
                 return current_node
 
             # This state has been explored, select best action
-            current_node = max(current_node.children, key=lambda c: self.calculate_uct(c))
+            action_probs_dict = self.q_estimator.get_softmax_prob_multinom(node.state, current_node.valid_actions)
+            _, action_index = self.q_estimator.draw_from_multinomial(action_probs_dict)
+            current_node = current_node.children[action_index]
+            pass
+            
+            # current_node = max(current_node.children, key=lambda c: self.calculate_uct(c))
 
     def expand(self, node: StateNode[TState, TAction], iteration_number = None) -> StateNode[TState, TAction]:
         # If the node is terminal, return it
@@ -154,8 +162,39 @@ class StatefulSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Ge
 
         while current_state_node != None:
             current_state_node.max_reward = max(current_reward, current_state_node.max_reward)
+            
             current_state_node.reward += current_reward
+
+            state_children_iter = current_state_node.children
             current_state_node.n += 1
+
+            # get all taken actions to update q table
+            all_poss_actions = [sc.inducing_action for sc in state_children_iter]
+            action_visit_dict = {}
+            
+            for visited_action in all_poss_actions:
+                for state_child in state_children_iter:
+                    if state_child.inducing_action == visited_action:
+                        if repr(visited_action) not in action_visit_dict:
+                            action_visit_dict[repr(visited_action)] = 1
+                        else:
+                            action_visit_dict[repr(visited_action)] += 1
+            
+            reward_to_go_dict = {}
+            for visited_action in all_poss_actions:
+                for state_child in state_children_iter:
+                    if state_child.inducing_action == visited_action:
+                        reward_to_go_term = state_child.n / action_visit_dict[repr(state_child.inducing_action)] * self.q_estimator.get_state_value(state_child.state)
+                        if repr(visited_action) not in reward_to_go_dict:
+                            reward_to_go_dict[repr(visited_action)] = {"reward_to_go": reward_to_go_term, "action_obj": visited_action}
+                        else:
+                            reward_to_go_dict[repr(visited_action)]["reward_to_go"] += reward_to_go_term
+            
+            # Q and Value Update: ### Check this over...
+            for action_repr in reward_to_go_dict.keys():
+                self.q_estimator.update_q_value(current_state_node.state, reward_to_go_dict[action_repr]["action_obj"], reward, reward_to_go_dict[action_repr])
+
+            
 
             current_state_node = current_state_node.parent
             current_reward *= self.discount_factor
