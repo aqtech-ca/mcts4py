@@ -168,6 +168,7 @@ class StatefulSolverMENTS(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom
             state_children_iter = current_state_node.children
             current_state_node.n += 1
 
+            ### Check this over
             # get all taken actions to update q table
             all_poss_actions = [sc.inducing_action for sc in state_children_iter]
             action_visit_dict = {}
@@ -192,9 +193,9 @@ class StatefulSolverMENTS(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom
             
             # Q and Value Update: ### Check this over...
             for action_repr in reward_to_go_dict.keys():
-                self.q_estimator.update_q_value(current_state_node.state, reward_to_go_dict[action_repr]["action_obj"], reward, reward_to_go_dict[action_repr])
-
-            
+                self.q_estimator.update_q_value(current_state_node.state, reward_to_go_dict[action_repr]["action_obj"], reward, reward_to_go_dict[action_repr]["reward_to_go"])
+            self.q_estimator.update_state_value(current_state_node.state, all_poss_actions)
+            current_state_node.ments_value = self.q_estimator.get_state_value(current_state_node)
 
             current_state_node = current_state_node.parent
             current_reward *= self.discount_factor

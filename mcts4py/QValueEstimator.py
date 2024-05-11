@@ -95,7 +95,8 @@ class QValueEstimator:
             decay_func = self.lambda_temp_callback
         else:
             decay_func = lambda x: lambda_temp_term
-        prob_ments = (1 - decay_func(self.num_calls))*rho_ments + decay_func(self.num_calls)/self.action_space_size
+        decay_term = decay_func(self.num_calls)
+        prob_ments = (1 - decay_term)*rho_ments + decay_term/self.action_space_size
         return prob_ments
     
     def get_softmax_prob_multinom(self, state, possible_actions):
@@ -109,8 +110,12 @@ class QValueEstimator:
         actions = list(action_prob_dict.keys())
         unnormalized_probs = list(action_prob_dict.values())
         normalized_probs = np.array(unnormalized_probs) / np.sum(unnormalized_probs)
+        if np.isnan(normalized_probs).any():
+            # If NaNs exist, replace them with uniform probabilities
+            normalized_probs[np.isnan(normalized_probs)] = 1.0 / len(normalized_probs)
         action_index = np.random.multinomial(1, normalized_probs).argmax()
         # Return the action corresponding to the drawn index
+        self.num_calls += 1
         return actions[action_index], action_index
     
     # def forward_bellman_update(self, state, action, reward, next_state, done, discount_factor):
