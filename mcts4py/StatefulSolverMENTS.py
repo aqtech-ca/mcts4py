@@ -40,6 +40,8 @@ class StatefulSolverMENTS(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom
         self.value_function_lower_estimator_callback = value_function_lower_estimator_callback
 
         self.q_estimator = QValueEstimator(alpha=alpha_value, lambda_temp_callback=lambda_temp_callback)
+
+        self.ments_value_tracker = []
         
         super().__init__(exploration_constant, verbose, max_iteration,
                          early_stop, early_stop_condition, exploration_constant_decay)
@@ -194,9 +196,12 @@ class StatefulSolverMENTS(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom
             
             # Q and Value Update: ### Check this over...
             for action_repr in reward_to_go_dict.keys():
-                self.q_estimator.update_q_value(current_state_node.state, reward_to_go_dict[action_repr]["action_obj"], reward, reward_to_go_dict[action_repr]["reward_to_go"])
+                self.q_estimator.update_q_value(current_state_node.state, reward_to_go_dict[action_repr]["action_obj"], reward, reward_to_go_dict[action_repr]["reward_to_go"], discount_factor=self.discount_factor)
             self.q_estimator.update_state_value(current_state_node.state, all_poss_actions)
-            current_state_node.ments_value = self.q_estimator.get_state_value(current_state_node)
+            current_state_node.ments_value = self.q_estimator.get_state_value(current_state_node.state)
+
+            if current_state_node.parent is None:
+                self.ments_value_tracker.append(current_state_node.ments_value)
 
             current_state_node = current_state_node.parent
             current_reward *= self.discount_factor

@@ -5,7 +5,9 @@ import numpy as np
 import math
 
 LAMBDA_MENTS_DECAY_RATE = 10.5
-ACTION_SPACE_SIZE = 2
+ACTION_SPACE_SIZE = 200
+DISCOUNT_FACTOR = 0.6
+MENTS_ALPHA = 0.1
 class StateValueNetwork(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
         super(StateValueNetwork, self).__init__()
@@ -32,7 +34,7 @@ def exponential_decay(num_calls, decay_rate=LAMBDA_MENTS_DECAY_RATE):
     result = initial_value * math.exp(-decay_rate * num_calls)
     return result
 class QValueEstimator:
-    def __init__(self, alpha=0.1, lambda_temp_callback=exponential_decay, action_space_size=ACTION_SPACE_SIZE):
+    def __init__(self, alpha=MENTS_ALPHA, lambda_temp_callback=exponential_decay, action_space_size=ACTION_SPACE_SIZE):
         # self.state_value_net = StateValueNetwork(state_dim, hidden_dim, 1)
         # self.q_net = StateActionValueNetwork(state_dim + action_dim, hidden_dim, 1)
         # self.optimizer_state_value = optim.Adam(self.state_value_net.parameters(), lr=0.001)
@@ -50,21 +52,21 @@ class QValueEstimator:
     #     self.num_calls += 1
     #     return self.state_value_net(state)
     def get_state_value(self, state):
-        if repr(state) in self.state_val_dict:
-            state_value = self.state_val_dict[repr(state)]
+        if repr(str(state)) in self.state_val_dict:
+            state_value = self.state_val_dict[repr(str(state))]
         else:
-            self.state_val_dict[repr(state)] = np.random.uniform()
-            state_value = self.state_val_dict[repr(state)]
+            self.state_val_dict[repr(str(state))] = np.random.uniform()
+            state_value = self.state_val_dict[repr(str(state))]
         return state_value
     
     def get_q_value(self, state, action):
         # state_action = torch.tensor(np.concatenate((state, action)), dtype=torch.float32)
         # return self.q_net(state_action)
-        if repr([state, action]) in self.q_val_dict:
-            q_value = self.q_val_dict[repr([state, action])]
+        if repr([str(state), str(action)]) in self.q_val_dict:
+            q_value = self.q_val_dict[repr([str(state), str(action)])]
         else:
-            self.q_val_dict[repr([state, action])] = np.random.uniform()
-            q_value = self.q_val_dict[repr([state, action])]
+            self.q_val_dict[repr([str(state), str(action)])] = np.random.uniform()
+            q_value = self.q_val_dict[repr([str(state), str(action)])]
         return q_value
     
     def get_max_q_value(self, state, possible_actions):
@@ -79,13 +81,18 @@ class QValueEstimator:
     def update_state_value(self, state, possible_actions):
         val_term = 0
         for a in possible_actions:
-            val_term += np.exp((1/self.alpha)*self.get_q_value(state, a))
+            q_value = self.get_q_value(state, a)
+            val_term += np.exp((1/self.alpha)*q_value)
         new_value = self.alpha * np.log(val_term)
-        self.state_val_dict[repr(state)] = new_value
+        self.state_val_dict[repr(str(state))] = new_value
         return new_value
     
-    def update_q_value(self, state, action, reward, reward_to_go):
-        self.q_val_dict[repr([state, action])] = reward + reward_to_go
+    def update_q_value(self, state, action, reward, reward_to_go, discount_factor=DISCOUNT_FACTOR):
+        if np.isinf(reward):
+            reward = 0
+        if np.isinf(reward_to_go):
+            reward_to_go = 0
+        self.q_val_dict[repr([str(state), str(action)])] = reward + discount_factor*reward_to_go
     
     def get_softmax_prob_per_action(self, state, action, lambda_temp_term=None):
         q_val = self.get_q_value(state, action)
