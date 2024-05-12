@@ -28,7 +28,8 @@ class StatefulSolverMENTS(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom
                  alpha_value = 0.5,
                  value_clipping: bool = False,
                  value_function_upper_estimator_callback = None,
-                 value_function_lower_estimator_callback = None):
+                 value_function_lower_estimator_callback = None,
+                 lambda_temp_callback=exponential_decay):
         self.mdp = mdp
         self.discount_factor = discount_factor
         self.simulation_depth_limit = simulation_depth_limit
@@ -38,7 +39,7 @@ class StatefulSolverMENTS(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom
         self.value_function_upper_estimator_callback = value_function_upper_estimator_callback
         self.value_function_lower_estimator_callback = value_function_lower_estimator_callback
 
-        self.q_estimator = QValueEstimator(alpha=alpha_value)
+        self.q_estimator = QValueEstimator(alpha=alpha_value, lambda_temp_callback=lambda_temp_callback)
         
         super().__init__(exploration_constant, verbose, max_iteration,
                          early_stop, early_stop_condition, exploration_constant_decay)
