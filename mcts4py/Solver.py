@@ -39,6 +39,7 @@ class MCTSSolver(ABC, Generic[TAction, TNode, TRandom]):
         self.verbose = verbose
         self.exploration_constant_decay = exploration_constant_decay
         self.simulation_depth_limit = simulation_depth_limit
+        self.pol_dict = {}
         
 
     @abstractmethod
@@ -130,14 +131,21 @@ class MCTSSolver(ABC, Generic[TAction, TNode, TRandom]):
         if node.depth > 0:
             print("  " * (node.depth - 1) + " └ " + str(node))
 
-    def display_tree(self, depth_limit: int = 3) -> None:
-        self.display_tree_impl(self.simulation_depth_limit, self.root(), "")
+    def display_tree(self, depth_limit: int = 3, save_pol_dict: bool=False) -> None:
+        self.display_tree_impl(self.simulation_depth_limit, self.root(), "", save_pol_dict=save_pol_dict)
 
-    def display_tree_impl(self, depth_limit: int, node: Optional[TNode], indent: str) -> None:
+    def display_tree_impl(self, depth_limit: int, node: Optional[TNode], indent: str, save_pol_dict: bool=False) -> None:
 
         if node == None or node.depth > depth_limit:
             return
 
+        if save_pol_dict:
+            if isinstance(node, StateNode):
+                children = node._children.values()
+                if len(children) > 0:
+                    max_child = max(children, key=lambda c: c.n) 
+                    self.pol_dict[node._state] = max_child.inducing_action
+        
         print(
             f"{indent} {str(node)} (n: {node.n}, reward: {node.reward / node.n:.3f}, UCT: "
             f"{self.calculate_uct(node):.3f}, ments_value: {node.ments_value:.3f})")
@@ -150,8 +158,8 @@ class MCTSSolver(ABC, Generic[TAction, TNode, TRandom]):
         children.sort(key=lambda c: c.reward / c.n, reverse=True)
 
         for child in children[:-1]:
-            self.display_tree_impl(depth_limit, child, self.generate_indentation(indent) + " ├")
-        self.display_tree_impl(depth_limit, children[-1], self.generate_indentation(indent) + " └")
+            self.display_tree_impl(depth_limit, child, self.generate_indentation(indent) + " ├", save_pol_dict=save_pol_dict)
+        self.display_tree_impl(depth_limit, children[-1], self.generate_indentation(indent) + " └", save_pol_dict=save_pol_dict)
 
     def generate_indentation(self, indent: str):
         return indent.replace('├', '│').replace('└', ' ')
