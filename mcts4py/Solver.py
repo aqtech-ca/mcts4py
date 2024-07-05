@@ -5,8 +5,8 @@ from mcts4py.Nodes import *
 from tqdm import tqdm
 from abc import ABC, abstractmethod
 import numpy as np
-import graphviz
-import pandas as pd
+# import graphviz
+# import pandas as pd
 
 
 class MCTSSolver(ABC, Generic[TAction, TNode, TRandom]):
