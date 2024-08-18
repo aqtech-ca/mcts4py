@@ -113,7 +113,7 @@ class ActionNode(Generic[TState, TAction], Node[TAction]):
 
     @property
     def state(self) -> TState:
-        if self.__state == None:
+        if self.__state is None:
             raise RuntimeError(f"Simulation not run at depth: {self.depth}")
         return self.__state
 
@@ -123,7 +123,7 @@ class ActionNode(Generic[TState, TAction], Node[TAction]):
 
     @property
     def valid_actions(self) -> list[TAction]:
-        if self.__valid_actions == None:
+        if self.__valid_actions is None:
             raise RuntimeError(f"Simulation not run")
         return self.__valid_actions
 
@@ -303,6 +303,7 @@ class SoftmaxActionNode((ActionNode[TState, TAction])):
         self.Q_stf = {}  # Dictionary to store Q_stf(s, a) for each action a
         self.N_sa = {}  # Dictionary to store N(s, a) for each action a
         self.valid_actions = valid_actions if valid_actions is not None else []
+        self.n = 0
 
         for action in self.valid_actions:
             self.Q_stf[action] = 0.0

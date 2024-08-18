@@ -27,6 +27,7 @@ solver = MentSolver(
 
 solver.run_search(100)
 # print("\nSearch Tree:")
+# solver.do_best_action(solver.root())
 solver.print_tree(solver.root())
 # solver.display_tree()
 

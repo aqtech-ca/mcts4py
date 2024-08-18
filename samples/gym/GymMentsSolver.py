@@ -87,7 +87,9 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
                 print("Terminal state reached")
             parent = node.get_parent()
             parent_state = parent.state if parent != None else None
-            return self.mdp.reward(parent_state, node.inducing_action, node.state)
+            if parent_state is None:
+                return 0.0
+            return self.mdp.reward(parent_state, node.inducing_action)
 
         current_state = node.state
         discount = self.discount_factor ** depth
@@ -96,15 +98,15 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
         random_action = random.choice(valid_actions)
         new_state = self.mdp.transition(current_state, random_action)
 
-        reward = self.mdp.reward(current_state, random_action, new_state) * discount
+        reward = self.mdp.reward(current_state, random_action, ) * discount
         if self.mdp.is_terminal(new_state):
-            reward = self.mdp.reward(current_state, random_action, new_state) * discount
+            reward = self.mdp.reward(current_state, random_action) * discount
             if self.verbose:
                 print(f"-> Terminal state reached: {reward}")
             return reward
 
         if depth > self.simulation_depth_limit:
-            reward = self.mdp.reward(current_state, random_action, new_state) * discount
+            reward = self.mdp.reward(current_state, random_action) * discount
             if self.verbose:
                 print(f"-> Depth limit reached: {reward}")
             return reward
@@ -116,17 +118,20 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
     def backpropagate(self, node: SoftmaxActionNode, reward: float) -> None:
         current_node = node
         parent = node.parent
-        direct_reward = self.mdp.reward(parent, current_node.inducing_action, current_node.state)
-        current_reward = reward
 
         if parent is not None:
+            direct_reward = self.mdp.reward(parent, current_node.inducing_action)
+            current_reward = reward
+
             parent.n += 1
             parent.N_sa[current_node.inducing_action] += 1
             parent.Q_stf[current_node.inducing_action] = direct_reward + reward
-            parent = parent.parent
 
+            direct_reward = self.mdp.reward(parent, current_node.inducing_action)
+
+            parent = parent.parent
             current_node = current_node.parent
-            direct_reward = self.mdp.reward(parent, current_node.inducing_action, current_node.state)
+
 
             # Traverse the path from the current node to the root
             while parent is not None:
@@ -141,10 +146,12 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
                 parent.Q_stf[a] = (direct_reward + self.discount_factor *
                     np.log(np.sum(np.exp([current_node.Q_stf[action] / self.discount_factor for action in current_node.valid_actions]))))
                 # Move to the parent node and discount the reward
+
+                direct_reward = self.mdp.reward(parent, current_node.inducing_action)
+                current_reward *= self.discount_factor
+
                 current_node = current_node.parent
                 parent = parent.parent
-                direct_reward = self.mdp.reward(parent, current_node.inducing_action, current_node.state)
-                current_reward *= self.discount_factor
 
     # Utilities
 
