@@ -5,7 +5,7 @@ _tests_require = ["pytest", "hypothesis", "pytest-benchmark"]
 
 setup(
     name="mcts4py",
-    version='0.20.2',
+    version='0.20.3-beta',
     packages=find_packages(exclude="tests"),
     tests_require=_tests_require,
     extras_require={"tests": _tests_require, "drawing": ["python-igraph"]},

@@ -16,7 +16,8 @@ class MCTSSolver(ABC, Generic[TAction, TNode, TRandom]):
                  max_iteration=1000,
                  early_stop=False,
                  early_stop_condition: dict = None,
-                 exploration_constant_decay: float = 1.0):
+                 exploration_constant_decay: float = 1.0,
+                 simulation_depth_limit: int = 100):
         """
         :param exploration_constant:
         :param verbose:
@@ -36,6 +37,7 @@ class MCTSSolver(ABC, Generic[TAction, TNode, TRandom]):
         self.exploration_constant = exploration_constant
         self.verbose = verbose
         self.exploration_constant_decay = exploration_constant_decay
+        self.simulation_depth_limit = simulation_depth_limit
 
     @abstractmethod
     def root(self) -> TNode:
@@ -125,7 +127,7 @@ class MCTSSolver(ABC, Generic[TAction, TNode, TRandom]):
             print("  " * (node.depth - 1) + " └ " + str(node))
 
     def display_tree(self, depth_limit: int = 3) -> None:
-        self.display_tree_impl(depth_limit, self.root(), "")
+        self.display_tree_impl(self.simulation_depth_limit, self.root(), "")
 
     def display_tree_impl(self, depth_limit: int, node: Optional[TNode], indent: str) -> None:
 
