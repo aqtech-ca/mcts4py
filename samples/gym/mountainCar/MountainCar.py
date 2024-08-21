@@ -3,7 +3,7 @@ from samples.gym.GymGenericSolver import GenericSolver
 from samples.gym.mountainCar.mountainCarWrapper import MountainCarWrapper
 
 
-def run_experiment(solver_class, iterations_list, trials=1):
+def evaluate_solver(solver_class, iterations_list, trials=1):
     results = []
 
     for iterations in iterations_list:
@@ -72,9 +72,9 @@ def run_experiment(solver_class, iterations_list, trials=1):
 if __name__ == "__main__":
     iterations_list = [1, 2, 3, 5, 10, 50, 100, 500, 1000, 5000]
 
-    uct_results = run_experiment(GenericSolver, iterations_list)
+    uct_results = evaluate_solver(GenericSolver, iterations_list)
 
-    ments_results = run_experiment(MentSolver, iterations_list)
+    ments_results = evaluate_solver(MentSolver, iterations_list)
 
     print("UCT Results:", uct_results)
     print("MENTS Results:", ments_results)

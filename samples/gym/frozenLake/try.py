@@ -40,22 +40,3 @@ state, reward, done, trunc, _ = lake.step(3)
 print(f"state: {state}, reward: {reward}, done: {done}, trunc: {trunc}")
 state, reward, done, trunc, _ = lake.step(0)
 print(f"state: {state}, reward: {reward}, done: {done}, trunc: {trunc}")
-
-
-# lake2 = copy.deepcopy(lake)
-#
-#
-# state, reward, done, trunc, _ = lake.step(1)
-# print(f"state: {state}, reward: {reward}, done: {done}, trunc: {trunc}")
-#
-#
-# # lake2.reset()
-# _, _, _, _, _ = lake2.step(1)
-# state, reward, done, trunc, _ = lake2.step(1)
-# print(f"state: {state}, reward: {reward}, done: {done}, trunc: {trunc}")
-#
-# lake = lake2
-# state, reward, done, trunc, _ = lake.step(1)
-# print(f"state: {state}, reward: {reward}, done: {done}, trunc: {trunc}")
-
-

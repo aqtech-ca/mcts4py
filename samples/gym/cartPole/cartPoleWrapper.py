@@ -32,8 +32,13 @@ class CartPoleMDP(MDP, gym.Wrapper):
         self.env = mdp_copy
         return reward
 
-    def is_terminal(self, state: TState) -> bool:
-        return time.time() - self.start > self.time_limit
+    # def is_terminal(self, state: TState) -> bool:
+    #     return time.time() - self.start > self.time_limit
+
+    def is_terminal(self, state: TState, step=0) -> bool:
+        if step > self.time_limit:
+            print(f"step:{step}, time:{self.time_limit}")
+        return step > self.time_limit
 
     def actions(self, state: Any, state_visit=None, iteration_number=0, max_iteration_number=0, dpw_exploration=1,
                 dpw_alpha=1, min_action=False) -> List[int]:

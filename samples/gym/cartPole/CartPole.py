@@ -10,8 +10,7 @@ def evaluate_solver(solver_class, iterations_list, time_limit):
     results = []
 
     for iterations in iterations_list:
-        total_rewards = 0
-        total_steps = 0
+
         gym_mdp = CartPoleMDP(time_limit)
         solver = solver_class(
             mdp=gym_mdp,
@@ -26,10 +25,9 @@ def evaluate_solver(solver_class, iterations_list, time_limit):
         step_count = 0
         max_steps = 100
 
-        while not solver.mdp.is_terminal(state) and step_count < max_steps:
+        while not solver.mdp.is_terminal(state, step_count) and step_count < max_steps:
             solver.run_search(iterations)
             best_action = solver.do_best_action(solver.root())
-            # print({"best_action": best_action})
             state, reward, done, _, _ = gym_mdp.env.step(best_action)
             total_reward += reward
             step_count += 1
@@ -43,24 +41,22 @@ def evaluate_solver(solver_class, iterations_list, time_limit):
                 verbose=False
             )
 
-            total_rewards += total_reward
-            total_steps += step_count
             if done:
-                print("endding cuz done")
+                print("pole fell")
                 break
 
         duration = time.time() - start
         results.append({
             "iterations": iterations,
-            "total_steps": total_steps,
-            "total_rewards": total_rewards,
+            "step_count": step_count,
+            "total_reward": total_reward,
             "duration": duration,
         })
 
         print({
             "iterations": iterations,
-            "total_steps": total_steps,
-            "total_rewards": total_rewards,
+            "step_count": step_count,
+            "total_reward": total_reward,
             "duration": duration,
         })
 
@@ -71,7 +67,7 @@ if __name__ == "__main__":
     iterations_list = [1, 2, 3, 5, 10, 50, 100, 500, 1000, 5000]
 
     print("running UCT")
-    uct_results = evaluate_solver(GenericSolver, iterations_list, 5)
+    uct_results = evaluate_solver(GenericSolver, iterations_list, 30)
 
     print("running MENTS")
-    ments_results = evaluate_solver(MentSolver, iterations_list, 5)
+    ments_results = evaluate_solver(MentSolver, iterations_list, 30)

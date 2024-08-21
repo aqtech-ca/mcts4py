@@ -3,7 +3,7 @@ from samples.gym.GymGenericSolver import GenericSolver
 from samples.gym.frozenLake.frozenLakeWrapper import FrozenLakeMDP
 
 
-def run_frozen_lake_experiment(solver_class, iterations_list, trials=1):
+def evaluate_solver(solver_class, iterations_list, trials=1):
     results = []
 
     for iterations in iterations_list:
@@ -30,7 +30,7 @@ def run_frozen_lake_experiment(solver_class, iterations_list, trials=1):
                 solver.run_search(iterations)
                 best_action = solver.do_best_action(solver.root())
                 state, reward, done, _, _ = gym_mdp.env.step(best_action)
-                print(f"move from {gym_mdp.initial}, action: {best_action}, state: {state}, reward: {reward}, done: {done}")
+                # print(f"move from {gym_mdp.initial}, action: {best_action}, state: {state}, reward: {reward}, done: {done}")
                 total_reward += reward
                 step_count += 1
 
@@ -73,10 +73,10 @@ if __name__ == "__main__":
     iterations_list = [1, 2, 3, 5, 10, 50, 100, 500, 1000, 5000]
 
     print("running UCT")
-    # uct_results = run_frozen_lake_experiment(GenericSolver, iterations_list)
+    uct_results = evaluate_solver(GenericSolver, iterations_list)
 
     print("running METNS")
-    ments_results = run_frozen_lake_experiment(MentSolver, iterations_list)
+    ments_results = evaluate_solver(MentSolver, iterations_list)
 
     # print("UCT Results:", uct_results)
     # print("MENTS Results:", ments_results)
