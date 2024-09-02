@@ -1,6 +1,5 @@
 import gym
 import copy
-import numpy as np
 
 
 class RevertibleFrozenLakeEnv(gym.Wrapper):

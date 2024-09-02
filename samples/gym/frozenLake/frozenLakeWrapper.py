@@ -8,8 +8,8 @@ from mcts4py.Types import TState
 
 class FrozenLakeMDP(MDP, gym.Wrapper):
 
-    def __init__(self):
-        super(FrozenLakeMDP, self).__init__(gym.make("FrozenLake-v1", is_slippery=False, render_mode='rgb_array'))
+    def __init__(self, is_slippery):
+        super(FrozenLakeMDP, self).__init__(gym.make("FrozenLake-v1",is_slippery=is_slippery, render_mode='rgb_array'))
         self.initial = self.reset()
 
     def initial_state(self) -> Any:

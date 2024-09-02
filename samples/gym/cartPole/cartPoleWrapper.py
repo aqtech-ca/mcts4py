@@ -9,11 +9,11 @@ from mcts4py.Types import TState
 
 
 class CartPoleMDP(MDP, gym.Wrapper):
-    def __init__(self, time_limit):
+    def __init__(self, goal_step):
         super(CartPoleMDP, self).__init__(gym.make("CartPole-v1"))
         self.initial = self.reset()
-        self.time_limit = time_limit
-        self.start = time.time()
+        self.goal_step = goal_step
+        # self.start = time.time()
 
     def initial_state(self) -> Any:
         return self.initial
@@ -36,9 +36,7 @@ class CartPoleMDP(MDP, gym.Wrapper):
     #     return time.time() - self.start > self.time_limit
 
     def is_terminal(self, state: TState, step=0) -> bool:
-        if step > self.time_limit:
-            print(f"step:{step}, time:{self.time_limit}")
-        return step > self.time_limit
+        return step >= self.goal_step
 
     def actions(self, state: Any, state_visit=None, iteration_number=0, max_iteration_number=0, dpw_exploration=1,
                 dpw_alpha=1, min_action=False) -> List[int]:

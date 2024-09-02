@@ -1,10 +1,13 @@
 from samples.gym.GymMentsSolver import MentSolver
+from samples.gym.GymMentsSolverWithBTS import MentSolverWithBTS
 from samples.gym.GymGenericSolver import GenericSolver
 from samples.gym.frozenLake.frozenLakeWrapper import FrozenLakeMDP
 
 
-def evaluate_solver(solver_class, iterations_list, trials=1):
+def evaluate_solver(solver_class, iterations_list, trials=10, is_slippery=False):
+    exploration_constant = 0.5
     results = []
+    print(f"trials: {trials}, exploration_constant: {exploration_constant},  is_slippery: {is_slippery}")
 
     for iterations in iterations_list:
         success_count = 0
@@ -12,12 +15,12 @@ def evaluate_solver(solver_class, iterations_list, trials=1):
         total_steps = 0
 
         for trial in range(trials):
-            gym_mdp = FrozenLakeMDP()
+            gym_mdp = FrozenLakeMDP(is_slippery)
             solver = solver_class(
                 mdp=gym_mdp,
                 simulation_depth_limit=100,
-                exploration_constant=1.0,
-                discount_factor=0.99,
+                exploration_constant=exploration_constant,
+                discount_factor=0.8,
                 verbose=False
             )
 
@@ -38,15 +41,17 @@ def evaluate_solver(solver_class, iterations_list, trials=1):
                 solver = solver_class(
                     mdp=gym_mdp,
                     simulation_depth_limit=100,
-                    exploration_constant=1.0,
-                    discount_factor=0.99,
+                    exploration_constant=exploration_constant,
+                    discount_factor=0.8,
                     verbose=False
                 )
 
                 total_rewards += total_reward
                 total_steps += step_count
                 if state == 15:
+                    print(f"iterations: {iterations} steps: {step_count} trial: {trial} state: {state}")
                     success_count += 1
+                    break
 
         avg_reward = total_rewards / trials
         avg_steps = total_steps / trials
@@ -70,13 +75,16 @@ def evaluate_solver(solver_class, iterations_list, trials=1):
 
 
 if __name__ == "__main__":
-    iterations_list = [1, 2, 3, 5, 10, 50, 100, 500, 1000, 5000]
+    iterations_list = [1, 2, 3, 5, 10, 50, 100, 500, 1000, 1500, 2000, 2500]
+
+    print("running MENTS with BTS")
+    bts_results = evaluate_solver(MentSolverWithBTS, iterations_list, is_slippery=True)
+    print("done")
 
     print("running UCT")
-    uct_results = evaluate_solver(GenericSolver, iterations_list)
+    uct_results = evaluate_solver(GenericSolver, iterations_list, is_slippery=True)
+    print("done")
 
     print("running METNS")
-    ments_results = evaluate_solver(MentSolver, iterations_list)
-
-    # print("UCT Results:", uct_results)
-    # print("MENTS Results:", ments_results)
+    ments_results = evaluate_solver(MentSolver, iterations_list, is_slippery=True)
+    print("done")
