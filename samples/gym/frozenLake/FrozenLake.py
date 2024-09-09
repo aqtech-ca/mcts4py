@@ -77,14 +77,14 @@ def evaluate_solver(solver_class, iterations_list, trials=10, is_slippery=False)
 if __name__ == "__main__":
     iterations_list = [1, 2, 3, 5, 10, 50, 100, 500, 1000, 1500, 2000, 2500]
 
-    print("running MENTS with BTS")
-    bts_results = evaluate_solver(MentSolverWithBTS, iterations_list, is_slippery=True)
-    print("done")
+    # print("running MENTS with BTS")
+    # bts_results = evaluate_solver(MentSolverWithBTS, iterations_list, is_slippery=True)
+    # print("done")
 
     print("running UCT")
-    uct_results = evaluate_solver(GenericSolver, iterations_list, is_slippery=True)
+    uct_results = evaluate_solver(GenericSolver, iterations_list, is_slippery=False)
     print("done")
 
     print("running METNS")
-    ments_results = evaluate_solver(MentSolver, iterations_list, is_slippery=True)
+    ments_results = evaluate_solver(MentSolver, iterations_list, is_slippery=False)
     print("done")

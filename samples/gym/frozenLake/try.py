@@ -1,41 +1,31 @@
 import gym
 import copy
 
+from samples.gym.frozenLake.frozenLakeWrapper import FrozenLakeMDP
 
-class RevertibleFrozenLakeEnv(gym.Wrapper):
-    def __init__(self, env_name):
-        super(RevertibleFrozenLakeEnv, self).__init__(gym.make(env_name, is_slippery=False))
-        self.state_history = []
 
-    def reset(self, **kwargs):
-        obs = super(RevertibleFrozenLakeEnv, self).reset(**kwargs)
-        self.state_history = [(copy.deepcopy(obs), self.env.np_random.bit_generator.state)]
-        return obs
+class CustomFrozenLakeEnv(gym.RewardWrapper):
+    def __init__(self, env):
+        super(CustomFrozenLakeEnv, self).__init__(env)
 
-    def step(self, action):
-        obs, reward, done, trunc, info = super(RevertibleFrozenLakeEnv, self).step(action)
-        self.state_history.append((copy.deepcopy(obs), self.env.np_random.bit_generator.state))
-        return obs, reward, done, trunc, info
+    def reward(self, reward):
 
-    def revert_step(self):
-        if len(self.state_history) > 1:
-            self.state_history.pop()  # Remove the last state
-            obs, rng_state = self.state_history[-1]  # Get the previous state and RNG state
-            self.env.np_random.bit_generator.state = rng_state
-            return obs
+        print(self.env.unwrapped.s)
+
+        if self.env.unwrapped.s in [5, 7, 11, 12]:
+            return -10
+        elif self.env.unwrapped.s == 15:
+            return 10
         else:
-            raise Exception("No previous state to revert to")
+            return -0.01
 
 
-# Example usage:
-lake = gym.make('FrozenLake-v1', is_slippery=False)
-lake.reset()
+is_slippery = False  # Choose whether the lake is slippery or not
+env = FrozenLakeMDP(is_slippery)
 
-state, reward, done, trunc, _ = lake.step(1)
-print(f"state: {state}, reward: {reward}, done: {done}, trunc: {trunc}")
-state, reward, done, trunc, _ = lake.step(2)
-print(f"state: {state}, reward: {reward}, done: {done}, trunc: {trunc}")
-state, reward, done, trunc, _ = lake.step(3)
-print(f"state: {state}, reward: {reward}, done: {done}, trunc: {trunc}")
-state, reward, done, trunc, _ = lake.step(0)
-print(f"state: {state}, reward: {reward}, done: {done}, trunc: {trunc}")
+state = env.initial_state()
+print(f"Initial State: {state}")
+
+print(env.reward(0, 1))
+state, reward, _, _, _ = env.step(1)
+print(f"reward: {reward}, New State: {state}")

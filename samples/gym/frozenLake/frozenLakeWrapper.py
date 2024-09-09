@@ -16,18 +16,25 @@ class FrozenLakeMDP(MDP, gym.Wrapper):
         return self.initial
 
     def transition(self, state: Any, action: int) -> Any:
-        mdp_copy = copy.deepcopy(self.env)
+        s = self.env.unwrapped.s
         new_state, _, _, _, _ = self.env.step(action)
-        self.env.close()
-        self.env = mdp_copy
+        self.env.unwrapped.s = s
         return new_state
 
     def reward(self, previous_state: Optional[Any], action: Optional[int]) -> float:
-        mdp_copy = copy.deepcopy(self.env)
-        _, reward, _, _, _ = self.env.step(action)
-        self.env.close()
-        self.env = mdp_copy
+        s = self.env.unwrapped.s
+        state, reward, _, _, _ = self.env.step(action)
+        if state in [5, 7, 11, 12]:
+            reward = -100  # Penalty
+        elif state == 15:
+            reward = 10  # Goal
+        else:
+            reward = -0.01
+        self.env.unwrapped.s = s
+        print(f"action: {action}, reward: {reward}, state: {self.env.unwrapped}")
         return reward
+
+
 
     def is_terminal(self, state: TState) -> bool:
         return state == 15
