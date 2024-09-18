@@ -33,7 +33,16 @@ def evaluate_solver(solver_class, iterations_list, trials=10, is_slippery=False)
                 solver.run_search(iterations)
                 best_action = solver.do_best_action(solver.root())
                 state, reward, done, _, _ = gym_mdp.env.step(best_action)
-                # print(f"move from {gym_mdp.initial}, action: {best_action}, state: {state}, reward: {reward}, done: {done}")
+                act = ''
+                if best_action == 0:
+                    act = '←'
+                elif best_action == 1:
+                    act = '↓'
+                elif best_action == 2:
+                    act = '→'
+                elif best_action == 3:
+                    act ='↑'
+                print(f"move from {gym_mdp.initial}, action: {act}, state: {state}, reward: {reward}, done: {done}")
                 total_reward += reward
                 step_count += 1
 
@@ -52,7 +61,7 @@ def evaluate_solver(solver_class, iterations_list, trials=10, is_slippery=False)
                     print(f"iterations: {iterations} steps: {step_count} trial: {trial} state: {state}")
                     success_count += 1
                     break
-
+            print(f"iterations: {iterations} steps: {step_count} trial: {trial} state: {state}")
         avg_reward = total_rewards / trials
         avg_steps = total_steps / trials
         success_rate = success_count / trials
@@ -81,10 +90,10 @@ if __name__ == "__main__":
     # bts_results = evaluate_solver(MentSolverWithBTS, iterations_list, is_slippery=True)
     # print("done")
 
-    print("running UCT")
-    uct_results = evaluate_solver(GenericSolver, iterations_list, is_slippery=False)
-    print("done")
+    # print("running UCT")
+    # uct_results = evaluate_solver(GenericSolver, iterations_list, is_slippery=True)
+    # print("done")
 
     print("running METNS")
-    ments_results = evaluate_solver(MentSolver, iterations_list, is_slippery=False)
+    ments_results = evaluate_solver(MentSolver, iterations_list, is_slippery=True)
     print("done")

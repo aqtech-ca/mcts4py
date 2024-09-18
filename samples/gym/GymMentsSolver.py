@@ -1,5 +1,6 @@
 from mcts4py.Solver import *
 from mcts4py.MDP import *
+import numpy as np
 
 
 class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic[TState, TAction, TRandom]):
@@ -9,20 +10,22 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
                  simulation_depth_limit: int,
                  exploration_constant: float,
                  discount_factor: float,
-                 verbose: bool = False):
+                 verbose: bool = False,
+                 epsilon: float = 0.8):
 
         self.mdp = mdp
         self.simulation_depth_limit = simulation_depth_limit
         self.discount_factor = discount_factor
         self.__root_node = SoftmaxActionNode[TState, TAction](None, None, self.mdp.actions(self.mdp.initial_state()))
         self.simulate_action(self.__root_node)
+        self.epsilon = epsilon
 
         super().__init__(exploration_constant, verbose)
 
     def root(self) -> SoftmaxActionNode[TState, TAction]:
         return self.__root_node
 
-    def select(self, node: SoftmaxActionNode[TState, TAction], iteration_number=None, epsilon=0.5) -> SoftmaxActionNode[
+    def select(self, node: SoftmaxActionNode[TState, TAction], iteration_number=None) -> SoftmaxActionNode[
         TState, TAction]:
         if len(node.children) == 0:
             return node
@@ -42,7 +45,7 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
                 return current_node
 
             # This state has been explored, select best action
-            action = self.select_action(current_node, epsilon)
+            action = self.select_action(current_node)
             next_node = None
             for child in current_node.children:
                 if child.inducing_action == action:
@@ -140,10 +143,19 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
                 # Update visit count
                 parent.N_sa[current_node.inducing_action] += 1
 
+                # Stable log-sum-exp calculation to avoid underflow/overflow issues
+                max_q = max(
+                    [current_node.Q_stf[action] / self.discount_factor for action in current_node.valid_actions])
+                sum_exp = np.sum(np.exp([(current_node.Q_stf[action] / self.discount_factor) - max_q for action in
+                                         current_node.valid_actions]))
+
+                # Avoid log(0) by adding a small value to the sum
+                log_sum_exp = np.log(sum_exp + 1e-6) + max_q
+
+
                 # Update Q_stf value
                 a = current_node.inducing_action
-                parent.Q_stf[a] = (direct_reward + self.discount_factor *
-                    np.log(np.sum(np.exp([current_node.Q_stf[action] / self.discount_factor for action in current_node.valid_actions]))))
+                parent.Q_stf[a] = direct_reward + self.discount_factor * log_sum_exp
                 # Move to the parent node and discount the reward
 
                 direct_reward = self.mdp.reward(parent, current_node.inducing_action)
@@ -175,16 +187,23 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
             if action not in node.N_sa:
                 node.N_sa[action] = 0
 
-    def select_action(self, node, epsilon, tau=1.0):
-        lambda_s = calculate_lambda_s(node, epsilon)
+    def select_action(self, node, tau=1.0):
+        lambda_s = calculate_lambda_s(node, self.epsilon)
         pi_T = {}
+
+        softmax_denominator = sum(np.exp(node.Q_stf[act] / tau) for act in node.valid_actions)
+
+        if softmax_denominator == 0:
+            softmax_denominator = 1e-6
 
         for a in node.valid_actions:
             if a in node.Q_stf:
-                softmax_part = (1 - lambda_s) * np.exp(node.Q_stf[a] / tau) / sum(
-                    np.exp(node.Q_stf[act]) / tau for act in node.valid_actions)
+                try:
+                    softmax_part = (1 - lambda_s) * np.exp(node.Q_stf[a] / tau) / softmax_denominator
+                except (OverflowError, FloatingPointError):
+                    softmax_part = 0.0  # overflows in exp()
             else:
-                # Handle case where Q_stf[a] is not initialized or available
+                # Q_stf[a] is not initialized or available
                 softmax_part = 0.0
 
             uniform_part = lambda_s / len(node.valid_actions)
@@ -193,6 +212,9 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
         # Normalize probabilities to ensure they sum to 1
         total_prob = sum(pi_T[a] for a in node.valid_actions)
         probabilities = [pi_T[a] / total_prob for a in node.valid_actions]
+
+        if np.isnan(probabilities).any():
+            raise ValueError(f"NaN detected in probabilities: {probabilities}")
 
         actions = list(node.valid_actions)
         return np.random.choice(actions, p=probabilities)

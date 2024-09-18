@@ -1,7 +1,9 @@
 import gym
 import copy
 
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
+from gym.core import ActType, ObsType
+
 from mcts4py.MDP import MDP
 from mcts4py.Types import TState
 
@@ -31,10 +33,13 @@ class FrozenLakeMDP(MDP, gym.Wrapper):
         else:
             reward = -0.01
         self.env.unwrapped.s = s
-        print(f"action: {action}, reward: {reward}, state: {self.env.unwrapped}")
+        # print(f"action: {action}, reward: {reward}, state: {self.env.unwrapped}")
         return reward
 
-
+    def step(self, action: ActType) -> Tuple[ObsType, float, bool, bool, dict]:
+        my_reward = self.reward(self.env.unwrapped.s, action)
+        state, reward, done, trunc, obs = self.env.step(action)
+        return state, my_reward, done, trunc, obs
 
     def is_terminal(self, state: TState) -> bool:
         return state == 15

@@ -20,7 +20,7 @@ class CustomFrozenLakeEnv(gym.RewardWrapper):
             return -0.01
 
 
-is_slippery = False  # Choose whether the lake is slippery or not
+is_slippery = False
 env = FrozenLakeMDP(is_slippery)
 
 state = env.initial_state()

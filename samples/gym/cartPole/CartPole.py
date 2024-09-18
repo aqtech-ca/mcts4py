@@ -6,7 +6,7 @@ from samples.gym.cartPole.cartPoleWrapper import CartPoleMDP
 
 
 def evaluate_solver(solver_class, iterations_list, goal, trials=10):
-    exploration_constant = 0.5
+    exploration_constant = 0.8
     results = []
     print(f"goal: {goal}, exploration_constant: {exploration_constant}")
 
@@ -27,12 +27,10 @@ def evaluate_solver(solver_class, iterations_list, goal, trials=10):
                 verbose=False
             )
 
-            state = gym_mdp.initial_state()
             total_reward = 0
             step_count = 0
-            max_steps = 100
 
-            while not solver.mdp.is_terminal(state, step_count) and step_count < max_steps:
+            while step_count < goal:
                 solver.run_search(iterations)
                 best_action = solver.do_best_action(solver.root())
                 state, reward, done, _, _ = gym_mdp.env.step(best_action)
@@ -51,16 +49,14 @@ def evaluate_solver(solver_class, iterations_list, goal, trials=10):
                 if done:
                     cart_position, cart_velocity, pole_angle, pole_velocity = state
                     if abs(cart_position) > 2.4:
-                        print("The cart moved out of bounds!")
-                    elif abs(pole_angle) > 0.209:
-                        print("The pole fell beyond 12 degrees!")
-                    else:
-                        print("Maximum episode length reached.")
+                        print(f"trial: {trial + 1}, The cart moved out of bounds!")
+                    elif abs(pole_angle) > 0.2095:
+                        print(f"trial: {trial + 1}, The pole fell beyond 12 degrees!")
                     break
-
-            if solver.mdp.is_terminal(state, step_count):
-                print(f"Trial {trial + 1}: success {step_count} steps")
-                success_count+=1
+                elif step_count >= goal:
+                    print(f"Trial {trial + 1}: success {step_count} steps")
+                    success_count += 1
+                    break
 
             duration = time.time() - start
             total_step_count += step_count
@@ -69,20 +65,20 @@ def evaluate_solver(solver_class, iterations_list, goal, trials=10):
 
 
         avg_step_count = total_step_count / trials
-        avg_total_reward = total_reward_sum / trials
+        avg_success = success_count / trials
         avg_duration = total_duration / trials
 
         results.append({
             "iterations": iterations,
             "avg_step_count": avg_step_count,
-            "avg_total_reward": avg_total_reward,
+            "avg_success": avg_success,
             "avg_duration": avg_duration,
         })
 
         print({
             "iterations": iterations,
             "avg_step_count": avg_step_count,
-            "avg_total_reward": avg_total_reward,
+            "avg_success": avg_success,
             "avg_duration": avg_duration,
         })
 
