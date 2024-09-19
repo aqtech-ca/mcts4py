@@ -1,6 +1,7 @@
 from mcts4py.GenericSolver import GenericSolver
 from mcts4py.Ment_Solver import MentSolver
 from samples.gridworld.GridworldMDP import *
+
 # from samples.gridworld.evaluate import *
 
 rewards = [GridworldReward(5, 0, -0.5), GridworldReward(4, 3, 0.5)]
@@ -13,17 +14,17 @@ mdp = GridworldMDP(
     y_size,
     rewards,
     transition_probability,
-    starting_location = GridworldState(6, 2, False))
+    starting_location=GridworldState(6, 2, False))
 
 print("Initial state:")
 mdp.visualize_state()
 
 solver = MentSolver(
     mdp,
-    simulation_depth_limit = 100,
-    exploration_constant = 1.0,
-    discount_factor = 1.0,
-    verbose = False)
+    simulation_depth_limit=100,
+    exploration_constant=1.0,
+    discount_factor=1.0,
+    verbose=False)
 
 solver.run_search(100)
 # print("\nSearch Tree:")
@@ -41,4 +42,3 @@ solver.print_tree(solver.root())
 # print(f"Average Reward: {average_reward}")
 # print(f"Success Rate: {success_rate}")
 # print(f"Average Steps to Goal: {average_steps}")
-

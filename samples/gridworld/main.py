@@ -12,21 +12,19 @@ mdp = GridworldMDP(
     y_size,
     rewards,
     transition_probability,
-    starting_location = GridworldState(6, 2, False))
+    starting_location=GridworldState(6, 2, False))
 
 print("Initial state:")
 mdp.visualize_state()
 
 solver = GenericSolver(
     mdp,
-    simulation_depth_limit = 100,
-    exploration_constant = 1.0,
-    discount_factor = 0.5,
-    verbose = False)
+    simulation_depth_limit=100,
+    exploration_constant=1.0,
+    discount_factor=0.5,
+    verbose=False)
 
 solver.run_search(1000)
 
 print("\nSearch Tree:")
 solver.display_tree()
-
-

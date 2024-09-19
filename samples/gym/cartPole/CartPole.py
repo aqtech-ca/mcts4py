@@ -6,7 +6,7 @@ from samples.gym.cartPole.cartPoleWrapper import CartPoleMDP
 
 
 def evaluate_solver(solver_class, iterations_list, goal, trials=10):
-    exploration_constant = 0.8
+    exploration_constant = 0.2
     results = []
     print(f"goal: {goal}, exploration_constant: {exploration_constant}")
 
@@ -18,7 +18,7 @@ def evaluate_solver(solver_class, iterations_list, goal, trials=10):
 
         for trial in range(trials):
             start = time.time()
-            gym_mdp = CartPoleMDP(goal)
+            gym_mdp = CartPoleMDP()
             solver = solver_class(
                 mdp=gym_mdp,
                 simulation_depth_limit=100,
@@ -34,6 +34,8 @@ def evaluate_solver(solver_class, iterations_list, goal, trials=10):
                 solver.run_search(iterations)
                 best_action = solver.do_best_action(solver.root())
                 state, reward, done, _, _ = gym_mdp.env.step(best_action)
+                # print(f"moving to state: {state}, with action: {best_action}")
+                time.sleep(0.5)
                 total_reward += reward
                 step_count += 1
 
@@ -63,7 +65,8 @@ def evaluate_solver(solver_class, iterations_list, goal, trials=10):
             total_reward_sum += total_reward
             total_duration += duration
 
-
+            gym_mdp.env.close()
+            time.sleep(3)
         avg_step_count = total_step_count / trials
         avg_success = success_count / trials
         avg_duration = total_duration / trials
@@ -74,14 +77,12 @@ def evaluate_solver(solver_class, iterations_list, goal, trials=10):
             "avg_success": avg_success,
             "avg_duration": avg_duration,
         })
-
         print({
             "iterations": iterations,
             "avg_step_count": avg_step_count,
             "avg_success": avg_success,
             "avg_duration": avg_duration,
         })
-
         if success_count == 10:
             break
 
@@ -92,10 +93,10 @@ if __name__ == "__main__":
     iterations_list = [1, 2, 3, 5, 10, 50, 100, 500, 1000, 1500, 2000, 2500]
     goals = [10, 20, 50, 100, 150]
 
-    # print("running UCT")
-    # for goal in goals:
-    #     uct_results = evaluate_solver(GenericSolver, iterations_list, goal)
-
-    print("running MENTS")
+    print("running UCT")
     for goal in goals:
-        ments_results = evaluate_solver(MentSolver, iterations_list, goal)
+        uct_results = evaluate_solver(GenericSolver, iterations_list, goal)
+
+    # print("running MENTS")
+    # for goal in goals:
+    #     ments_results = evaluate_solver(MentSolver, iterations_list, goal)

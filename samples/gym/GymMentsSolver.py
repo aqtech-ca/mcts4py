@@ -122,14 +122,14 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
         parent = node.parent
 
         if parent is not None:
-            direct_reward = self.mdp.reward(parent, current_node.inducing_action)
+            direct_reward = self.mdp.reward(parent.state, current_node.inducing_action)
             current_reward = reward
 
             parent.n += 1
             parent.N_sa[current_node.inducing_action] += 1
             parent.Q_stf[current_node.inducing_action] = direct_reward + reward
 
-            direct_reward = self.mdp.reward(parent, current_node.inducing_action)
+            direct_reward = self.mdp.reward(parent.state, current_node.inducing_action)
 
             parent = parent.parent
             current_node = current_node.parent
@@ -158,7 +158,7 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
                 parent.Q_stf[a] = direct_reward + self.discount_factor * log_sum_exp
                 # Move to the parent node and discount the reward
 
-                direct_reward = self.mdp.reward(parent, current_node.inducing_action)
+                direct_reward = self.mdp.reward(parent.state, current_node.inducing_action)
                 current_reward *= self.discount_factor
 
                 current_node = current_node.parent
@@ -213,14 +213,13 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
         total_prob = sum(pi_T[a] for a in node.valid_actions)
         probabilities = [pi_T[a] / total_prob for a in node.valid_actions]
 
-        if np.isnan(probabilities).any():
-            raise ValueError(f"NaN detected in probabilities: {probabilities}")
+        probabilities = [1.0 / len(probabilities) if np.isnan(p) else p for p in probabilities]
 
         actions = list(node.valid_actions)
+
         return np.random.choice(actions, p=probabilities)
 
     def softmax(self, Q_stf, tau=1.0):
-
         e_Qstf = np.exp(Q_stf / tau)
         return e_Qstf / e_Qstf.sum()
 

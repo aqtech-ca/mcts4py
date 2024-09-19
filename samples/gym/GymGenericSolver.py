@@ -74,13 +74,10 @@ class GenericSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Gen
                 print("Terminal state reached")
             parent = node.get_parent()
             parent_state = parent.state if parent != None else None
-            if parent_state is None:
-                return 0.0
             return self.mdp.reward(parent_state, node.inducing_action)
 
         current_state = node.state
         discount = self.discount_factor ** depth
-
         valid_actions = self.mdp.actions(current_state)
         random_action = random.choice(valid_actions)
         new_state = self.mdp.transition(current_state, random_action)

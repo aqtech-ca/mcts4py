@@ -1,31 +1,30 @@
-import gym
-import copy
-
+from samples.gym.GymGenericSolver import GenericSolver
 from samples.gym.frozenLake.frozenLakeWrapper import FrozenLakeMDP
 
 
-class CustomFrozenLakeEnv(gym.RewardWrapper):
-    def __init__(self, env):
-        super(CustomFrozenLakeEnv, self).__init__(env)
-
-    def reward(self, reward):
-
-        print(self.env.unwrapped.s)
-
-        if self.env.unwrapped.s in [5, 7, 11, 12]:
-            return -10
-        elif self.env.unwrapped.s == 15:
-            return 10
-        else:
-            return -0.01
-
-
 is_slippery = False
+exploration_constant= 0.5
 env = FrozenLakeMDP(is_slippery)
 
-state = env.initial_state()
-print(f"Initial State: {state}")
+solver = GenericSolver(
+    mdp=env,
+    simulation_depth_limit=100,
+    exploration_constant=exploration_constant,
+    discount_factor=0.8,
+    verbose=False
+)
 
-print(env.reward(0, 1))
-state, reward, _, _, _ = env.step(1)
-print(f"reward: {reward}, New State: {state}")
+solver.run_search(5)
+solver.display_tree(5)
+# state = env.initial_state()
+# print(f"Initial State: {state}")
+
+# state, reward, done, _, _ = env.step(2)
+# state, reward, done, _, _ = env.step(2)
+# state, reward, done, _, _ = env.step(2)
+# print(f"reward: {reward}, New State: {state}, done: {done}")
+
+#0 left
+#1 down
+#2 right
+#3 up

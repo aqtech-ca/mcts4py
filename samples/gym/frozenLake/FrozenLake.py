@@ -32,7 +32,8 @@ def evaluate_solver(solver_class, iterations_list, trials=10, is_slippery=False)
             while not done and step_count < max_steps:
                 solver.run_search(iterations)
                 best_action = solver.do_best_action(solver.root())
-                state, reward, done, _, _ = gym_mdp.env.step(best_action)
+                state, reward, done, _, _ = gym_mdp.step(best_action)
+
                 act = ''
                 if best_action == 0:
                     act = '←'
@@ -57,11 +58,10 @@ def evaluate_solver(solver_class, iterations_list, trials=10, is_slippery=False)
 
                 total_rewards += total_reward
                 total_steps += step_count
-                if state == 15:
+                if state in [3, 15]:
                     print(f"iterations: {iterations} steps: {step_count} trial: {trial} state: {state}")
                     success_count += 1
                     break
-            print(f"iterations: {iterations} steps: {step_count} trial: {trial} state: {state}")
         avg_reward = total_rewards / trials
         avg_steps = total_steps / trials
         success_rate = success_count / trials
@@ -90,9 +90,9 @@ if __name__ == "__main__":
     # bts_results = evaluate_solver(MentSolverWithBTS, iterations_list, is_slippery=True)
     # print("done")
 
-    # print("running UCT")
-    # uct_results = evaluate_solver(GenericSolver, iterations_list, is_slippery=True)
-    # print("done")
+    print("running UCT")
+    uct_results = evaluate_solver(GenericSolver, iterations_list, is_slippery=False)
+    print("done")
 
     print("running METNS")
     ments_results = evaluate_solver(MentSolver, iterations_list, is_slippery=True)
