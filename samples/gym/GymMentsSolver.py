@@ -10,15 +10,14 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
                  simulation_depth_limit: int,
                  exploration_constant: float,
                  discount_factor: float,
-                 verbose: bool = False,
-                 epsilon: float = 0.8):
+                 verbose: bool = False):
 
         self.mdp = mdp
         self.simulation_depth_limit = simulation_depth_limit
         self.discount_factor = discount_factor
         self.__root_node = SoftmaxActionNode[TState, TAction](None, None, self.mdp.actions(self.mdp.initial_state()))
         self.simulate_action(self.__root_node)
-        self.epsilon = epsilon
+        self.epsilon = exploration_constant
 
         super().__init__(exploration_constant, verbose)
 

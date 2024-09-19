@@ -1,5 +1,4 @@
 import gym
-import copy
 
 from typing import Any, List, Optional, Tuple
 from gym.core import ActType, ObsType

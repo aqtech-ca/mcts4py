@@ -3,8 +3,10 @@ from samples.gym.GymGenericSolver import GenericSolver
 from samples.gym.mountainCar.mountainCarWrapper import MountainCarWrapper
 
 
-def evaluate_solver(solver_class, iterations_list, trials=1):
+def evaluate_solver(solver_class, iterations_list, trials=10):
+    exploration_constant = 0.5
     results = []
+    print(f"trials: {trials}, exploration_constant: {exploration_constant}")
 
     for iterations in iterations_list:
         success_count = 0
@@ -16,7 +18,7 @@ def evaluate_solver(solver_class, iterations_list, trials=1):
             solver = solver_class(
                 mdp=gym_mdp,
                 simulation_depth_limit=100,
-                exploration_constant=1.0,
+                exploration_constant=exploration_constant,
                 discount_factor=0.99,
                 verbose=False
             )
@@ -29,7 +31,7 @@ def evaluate_solver(solver_class, iterations_list, trials=1):
             while not gym_mdp.is_terminal(state) and step_count < max_steps:
                 solver.run_search(iterations)
                 best_action = solver.do_best_action(solver.root())
-                state, reward, done, _, _ = gym_mdp.env.step(best_action)
+                state, reward, done, _, _ = gym_mdp.step(best_action)
                 total_reward += reward
                 step_count += 1
 
@@ -70,12 +72,13 @@ def evaluate_solver(solver_class, iterations_list, trials=1):
 
 
 if __name__ == "__main__":
-    iterations_list = [1, 2, 3, 5, 10, 50, 100, 500, 1000, 5000]
+    iterations_list = [1, 2, 3, 5, 10, 50, 100, 500, 1000, 1500, 2000]
 
-    uct_results = evaluate_solver(GenericSolver, iterations_list)
+    # print("running UCT")
+    # uct_results = evaluate_solver(GenericSolver, iterations_list)
+    # print("UCT Results:", uct_results)
 
+    print("running MENTS")
     ments_results = evaluate_solver(MentSolver, iterations_list)
-
-    print("UCT Results:", uct_results)
     print("MENTS Results:", ments_results)
 

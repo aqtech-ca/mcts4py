@@ -4,8 +4,8 @@ from samples.gym.GymGenericSolver import GenericSolver
 from samples.gym.frozenLake.frozenLakeWrapper import FrozenLakeMDP
 
 
-def evaluate_solver(solver_class, iterations_list, trials=100, is_slippery=False):
-    exploration_constant = 0.5
+def evaluate_solver(solver_class, iterations_list, trials=10, is_slippery=False):
+    exploration_constant = 0.8
     results = []
     print(f"trials: {trials}, exploration_constant: {exploration_constant},  is_slippery: {is_slippery}")
 

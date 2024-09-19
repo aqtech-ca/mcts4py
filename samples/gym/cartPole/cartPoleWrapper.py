@@ -1,5 +1,4 @@
 import gym
-import copy
 import math
 import numpy as np
 
@@ -79,3 +78,5 @@ class CartPoleMDP(MDP, gym.Wrapper):
     def actions(self, state: Any, state_visit=None, iteration_number=0, max_iteration_number=0, dpw_exploration=1,
                 dpw_alpha=1, min_action=False) -> List[int]:
         return [0, 1]
+
+
