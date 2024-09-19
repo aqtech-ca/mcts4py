@@ -134,7 +134,6 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
             parent = parent.parent
             current_node = current_node.parent
 
-
             # Traverse the path from the current node to the root
             while parent is not None:
                 # Update total visit count for the state
@@ -151,7 +150,6 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
 
                 # Avoid log(0) by adding a small value to the sum
                 log_sum_exp = np.log(sum_exp + 1e-6) + max_q
-
 
                 # Update Q_stf value
                 a = current_node.inducing_action
@@ -191,19 +189,21 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
         lambda_s = calculate_lambda_s(node, self.epsilon)
         pi_T = {}
 
+        # Compute the denominator for the softmax
         softmax_denominator = sum(np.exp(node.Q_stf[act] / tau) for act in node.valid_actions)
 
-        if softmax_denominator == 0:
+        # Avoid division by zero
+        if softmax_denominator == 0 or np.isnan(softmax_denominator):
             softmax_denominator = 1e-6
 
         for a in node.valid_actions:
             if a in node.Q_stf:
                 try:
                     softmax_part = (1 - lambda_s) * np.exp(node.Q_stf[a] / tau) / softmax_denominator
+                    softmax_part = max(softmax_part, 0.0)
                 except (OverflowError, FloatingPointError):
-                    softmax_part = 0.0  # overflows in exp()
+                    softmax_part = 0.0
             else:
-                # Q_stf[a] is not initialized or available
                 softmax_part = 0.0
 
             uniform_part = lambda_s / len(node.valid_actions)
@@ -211,9 +211,21 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
 
         # Normalize probabilities to ensure they sum to 1
         total_prob = sum(pi_T[a] for a in node.valid_actions)
-        probabilities = [pi_T[a] / total_prob for a in node.valid_actions]
 
-        probabilities = [1.0 / len(probabilities) if np.isnan(p) else p for p in probabilities]
+        if total_prob == 0 or np.isnan(total_prob):
+            probabilities = [1.0 / len(node.valid_actions) for _ in node.valid_actions]
+        else:
+            probabilities = [pi_T[a] / total_prob for a in node.valid_actions]
+
+        # probabilities are non-negative
+        probabilities = [max(p, 0.0) for p in probabilities]
+
+        # probabilities sum to 1
+        total_prob = sum(probabilities)
+        if total_prob > 0:
+            probabilities = [p / total_prob for p in probabilities]
+        else:
+            probabilities = [1.0 / len(probabilities) for _ in probabilities]
 
         actions = list(node.valid_actions)
 
@@ -223,5 +235,5 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
         e_Qstf = np.exp(Q_stf / tau)
         return e_Qstf / e_Qstf.sum()
 
-    def do_best_action(self, node: SoftmaxActionNode[TState,TAction]) -> TAction:
+    def do_best_action(self, node: SoftmaxActionNode[TState, TAction]) -> TAction:
         return max(node.Q_stf, key=node.Q_stf.get)

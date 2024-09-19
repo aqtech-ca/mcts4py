@@ -36,8 +36,8 @@ class FrozenLakeMDP(MDP, gym.Wrapper):
         new_state = self.transition(previous_state, action)
         if new_state in [5, 7, 11, 12]:
             reward = -10  # Penalty
-        elif new_state in [15]:
-            reward = 100  # Goal
+        elif new_state == 15:
+            reward = 10  # Goal
         else:
             reward = 0
         return reward
@@ -48,7 +48,7 @@ class FrozenLakeMDP(MDP, gym.Wrapper):
         return state, my_reward, done, trunc, info
 
     def is_terminal(self, state: TState) -> bool:
-        return state == 15
+        return state in [5, 7, 11, 12, 15]
 
     def actions(self, state: Any, state_visit=None, iteration_number=0, max_iteration_number=0, dpw_exploration=1,
                 dpw_alpha=1, min_action=False) -> List[int]:

@@ -1,4 +1,5 @@
 import time
+import copy
 
 from samples.gym.GymGenericSolver import GenericSolver
 from samples.gym.GymMentsSolver import MentSolver
@@ -6,7 +7,7 @@ from samples.gym.cartPole.cartPoleWrapper import CartPoleMDP
 
 
 def evaluate_solver(solver_class, iterations_list, goal, trials=10):
-    exploration_constant = 0.2
+    exploration_constant = 0.5
     results = []
     print(f"goal: {goal}, exploration_constant: {exploration_constant}")
 
@@ -32,6 +33,7 @@ def evaluate_solver(solver_class, iterations_list, goal, trials=10):
 
             while step_count < goal:
                 solver.run_search(iterations)
+                # solver.display_tree(5)
                 best_action = solver.do_best_action(solver.root())
                 state, reward, done, _, _ = gym_mdp.env.step(best_action)
                 # print(f"moving to state: {state}, with action: {best_action}")
@@ -65,7 +67,7 @@ def evaluate_solver(solver_class, iterations_list, goal, trials=10):
             total_reward_sum += total_reward
             total_duration += duration
 
-            gym_mdp.env.close()
+            gym_mdp.close()
             time.sleep(3)
         avg_step_count = total_step_count / trials
         avg_success = success_count / trials
@@ -93,10 +95,10 @@ if __name__ == "__main__":
     iterations_list = [1, 2, 3, 5, 10, 50, 100, 500, 1000, 1500, 2000, 2500]
     goals = [10, 20, 50, 100, 150]
 
-    print("running UCT")
-    for goal in goals:
-        uct_results = evaluate_solver(GenericSolver, iterations_list, goal)
-
-    # print("running MENTS")
+    # print("running UCT")
     # for goal in goals:
-    #     ments_results = evaluate_solver(MentSolver, iterations_list, goal)
+    #     uct_results = evaluate_solver(GenericSolver, iterations_list, goal)
+
+    print("running MENTS")
+    for goal in goals:
+        ments_results = evaluate_solver(MentSolver, iterations_list, goal)
