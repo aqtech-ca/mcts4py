@@ -6,16 +6,16 @@ is_slippery = False
 exploration_constant= 0.5
 env = FrozenLakeMDP(is_slippery)
 
-solver = GenericSolver(
-    mdp=env,
-    simulation_depth_limit=100,
-    exploration_constant=exploration_constant,
-    discount_factor=0.8,
-    verbose=False
-)
-
-solver.run_search(5)
-solver.display_tree(5)
+# solver = GenericSolver(
+#     mdp=env,
+#     simulation_depth_limit=100,
+#     exploration_constant=exploration_constant,
+#     discount_factor=0.8,
+#     verbose=False
+# )
+#
+# solver.run_search(5)
+# solver.display_tree(5)
 # state = env.initial_state()
 # print(f"Initial State: {state}")
 

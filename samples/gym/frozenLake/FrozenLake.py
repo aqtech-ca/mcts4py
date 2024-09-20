@@ -4,8 +4,8 @@ from samples.gym.GymGenericSolver import GenericSolver
 from samples.gym.frozenLake.frozenLakeWrapper import FrozenLakeMDP
 
 
-def evaluate_solver(solver_class, iterations_list, trials=10, is_slippery=False):
-    exploration_constant = 0.8
+def evaluate_solver(solver_class, iterations_list, trials=10, is_slippery=False, map_name='4x4'):
+    exploration_constant = 0.5
     results = []
     print(f"trials: {trials}, exploration_constant: {exploration_constant},  is_slippery: {is_slippery}")
 
@@ -15,7 +15,7 @@ def evaluate_solver(solver_class, iterations_list, trials=10, is_slippery=False)
         total_steps = 0
 
         for trial in range(trials):
-            gym_mdp = FrozenLakeMDP(is_slippery)
+            gym_mdp = FrozenLakeMDP(is_slippery, map_name=map_name)
             solver = solver_class(
                 mdp=gym_mdp,
                 simulation_depth_limit=100,
@@ -87,15 +87,16 @@ def evaluate_solver(solver_class, iterations_list, trials=10, is_slippery=False)
 
 if __name__ == "__main__":
     iterations_list = [1, 2, 3, 5, 10, 20, 30, 50, 100, 150, 200, 500, 1000, 1500, 2000, 2500]
+    map_name = '8x8'
 
     # print("running MENTS with BTS")
     # bts_results = evaluate_solver(MentSolverWithBTS, iterations_list, is_slippery=True)
     # print("done")
 
     # print("running UCT")
-    # uct_results = evaluate_solver(GenericSolver, iterations_list, is_slippery=False)
+    # uct_results = evaluate_solver(GenericSolver, iterations_list, is_slippery=False, map_name=map_name)
     # print("done")
 
     print("running METNS")
-    ments_results = evaluate_solver(MentSolver, iterations_list, is_slippery=False)
+    ments_results = evaluate_solver(MentSolver, iterations_list, is_slippery=False, map_name=map_name)
     print("done")

@@ -26,12 +26,13 @@ def evaluate_solver(solver_class, iterations_list, trials=10):
             state = gym_mdp.initial_state()
             total_reward = 0
             step_count = 0
-            max_steps = 100
+            done = False
+            trunc = False
 
-            while not gym_mdp.is_terminal(state) and step_count < max_steps:
+            while not done and not trunc:
                 solver.run_search(iterations)
                 best_action = solver.do_best_action(solver.root())
-                state, reward, done, _, _ = gym_mdp.step(best_action)
+                state, reward, done, trunc, _ = gym_mdp.step(best_action)
                 total_reward += reward
                 step_count += 1
 
@@ -43,6 +44,12 @@ def evaluate_solver(solver_class, iterations_list, trials=10):
                     discount_factor=0.99,
                     verbose=False
                 )
+
+                if done:
+                    total_steps += step_count
+                    success_count += 1
+                    break
+
             print(f"Trial {trial}: Steps = {step_count}, Reward = {total_reward}")
 
             total_rewards += total_reward
