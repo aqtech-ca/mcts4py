@@ -2,9 +2,11 @@ from samples.gym.GymGenericSolver import GenericSolver
 from samples.gym.frozenLake.frozenLakeWrapper import FrozenLakeMDP
 
 
-is_slippery = False
-exploration_constant= 0.5
-env = FrozenLakeMDP(is_slippery)
+
+if __name__ == "__main__":
+    is_slippery = False
+    exploration_constant= 0.5
+    env = FrozenLakeMDP(is_slippery, map_name='8x8')
 
 # solver = GenericSolver(
 #     mdp=env,

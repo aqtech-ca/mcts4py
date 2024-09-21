@@ -26,7 +26,7 @@ def evaluate_solver(solver_class, iterations_list, trials=10, is_slippery=False,
 
             total_reward = 0
             step_count = 0
-            max_steps = 100
+            max_steps = 200
             done = False
 
             while not done and step_count < max_steps:
@@ -34,16 +34,17 @@ def evaluate_solver(solver_class, iterations_list, trials=10, is_slippery=False,
                 best_action = solver.do_best_action(solver.root())
                 state, reward, done, _, _ = gym_mdp.step(best_action)
 
-                act = ''
-                if best_action == 0:
-                    act = '←'
-                elif best_action == 1:
-                    act = '↓'
-                elif best_action == 2:
-                    act = '→'
-                elif best_action == 3:
-                    act = '↑'
-                # print(f"move from {gym_mdp.initial}, action: {act}, state: {state}, reward: {reward}, done: {done}")
+                if solver.verbose:
+                    act = ''
+                    if best_action == 0:
+                        act = '←'
+                    elif best_action == 1:
+                        act = '↓'
+                    elif best_action == 2:
+                        act = '→'
+                    elif best_action == 3:
+                        act = '↑'
+                    print(f"move from {gym_mdp.initial}, action: {act}, state: {state}, reward: {reward}, done: {done}")
                 total_reward += reward
                 step_count += 1
 
@@ -57,7 +58,6 @@ def evaluate_solver(solver_class, iterations_list, trials=10, is_slippery=False,
                 )
 
                 if state == 15:
-                    # print(f"iterations: {iterations} steps: {step_count} trial: {trial} state: {state}")
                     total_steps += step_count
                     success_count += 1
                     break

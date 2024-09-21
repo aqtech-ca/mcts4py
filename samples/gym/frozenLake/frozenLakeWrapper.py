@@ -8,23 +8,6 @@ from mcts4py.MDP import MDP
 from mcts4py.Types import TState
 
 
-# "4x4": [
-#     "SFFF",
-#     "FHFH",
-#     "FFFH",
-#     "HFFG"
-# ]
-# "8x8": [
-#     "SFFFFFFF",
-#     "FFFFFFFF",
-#     "FFFHFFFF",
-#     "FFFFFHFF",
-#     "FFFHFFFF",
-#     "FHHFFFHF",
-#     "FHFFHFHF",
-#     "FFFHFFFG",
-# ]
-
 class FrozenLakeMDP(MDP, gym.Wrapper):
 
     def __init__(self, is_slippery, map_name='4x4'):
@@ -72,19 +55,35 @@ class FrozenLakeMDP(MDP, gym.Wrapper):
 
         if isinstance(state, tuple):
             state = state[0]
+
         valid_actions = []
-        if state % 4 != 0:
-            # left
-            valid_actions.append(0)
-        if state not in [12, 13, 14, 15]:
-            # down
-            valid_actions.append(1)
-        if state % 4 != 3:
-            # right
-            valid_actions.append(2)
-        if state > 3:
-            # up
-            valid_actions.append(3)
+        if self.map_name == '4x4':
+            if state % 4 != 0:
+                # left
+                valid_actions.append(0)
+            if state not in [12, 13, 14, 15]:
+                # down
+                valid_actions.append(1)
+            if state % 4 != 3:
+                # right
+                valid_actions.append(2)
+            if state > 3:
+                # up
+                valid_actions.append(3)
+
+        elif self.map_name == '8x8':
+            if state % 8 != 0:
+                # left
+                valid_actions.append(0)
+            if state < 56:
+                # down
+                valid_actions.append(1)
+            if state % 8 != 7:
+                # right
+                valid_actions.append(2)
+            if state > 7:
+                # up
+                valid_actions.append(3)
 
         return valid_actions
 

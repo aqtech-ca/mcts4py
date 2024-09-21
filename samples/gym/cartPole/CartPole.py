@@ -6,7 +6,7 @@ from samples.gym.GymMentsSolver import MentSolver
 from samples.gym.cartPole.cartPoleWrapper import CartPoleMDP
 
 
-def evaluate_solver(solver_class, iterations_list, goal_list, trials=10):
+def evaluate_solver(solver_class, iterations_list, goals, trials=10):
     exploration_constant = 0.8
     results = []
 
