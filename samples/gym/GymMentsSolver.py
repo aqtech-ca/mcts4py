@@ -184,7 +184,7 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
             if action not in node.N_sa:
                 node.N_sa[action] = 0
 
-    def select_action(self, node, tau=1.0):
+    def select_action(self, node, tau=0.5):
         lambda_s = calculate_lambda_s(node, self.epsilon)
         pi_T = {}
 
@@ -230,7 +230,7 @@ class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generi
 
         return np.random.choice(actions, p=probabilities)
 
-    def softmax(self, Q_stf, tau=1.0):
+    def softmax(self, Q_stf, tau=0.5):
         e_Qstf = np.exp(Q_stf / tau)
         return e_Qstf / e_Qstf.sum()
 

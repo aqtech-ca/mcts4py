@@ -7,7 +7,7 @@ from samples.gym.cartPole.cartPoleWrapper import CartPoleMDP
 
 
 def evaluate_solver(solver_class, iterations_list, goals, trials=10):
-    exploration_constant = 0.8
+    exploration_constant = 0.1
     results = []
 
     for goal in goals:
@@ -35,11 +35,9 @@ def evaluate_solver(solver_class, iterations_list, goals, trials=10):
 
                 while step_count < goal:
                     solver.run_search(iterations)
-                    # solver.display_tree(5)
                     best_action = solver.do_best_action(solver.root())
                     state, reward, done, _, _ = gym_mdp.env.step(best_action)
-                    # print(f"moving to state: {state}, with action: {best_action}")
-                    # time.sleep(0.5)
+
                     total_reward += reward
                     step_count += 1
 
@@ -54,13 +52,15 @@ def evaluate_solver(solver_class, iterations_list, goals, trials=10):
 
                     if done:
                         cart_position, cart_velocity, pole_angle, pole_velocity = state
-                        if abs(cart_position) > 2.4:
-                            print(f"trial: {trial + 1}, The cart moved out of bounds!")
-                        elif abs(pole_angle) > 0.2095:
-                            print(f"trial: {trial + 1}, The pole fell beyond 12 degrees!")
+                        if solver.verbose:
+                            if abs(cart_position) > 2.4:
+                                print(f"trial: {trial + 1}, The cart moved out of bounds!")
+                            elif abs(pole_angle) > 0.2095:
+                                print(f"trial: {trial + 1}, The pole fell beyond 12 degrees!")
                         break
                     elif step_count >= goal:
-                        print(f"Trial {trial + 1}: success {step_count} steps")
+                        if solver.verbose:
+                            print(f"Trial {trial + 1}: success {step_count} steps")
                         success_count += 1
                         break
 
@@ -96,8 +96,8 @@ if __name__ == "__main__":
     iterations_list = [1, 2, 3, 5, 10, 50, 100, 500, 1000, 1500, 2000, 2500]
     goals = [10, 20, 50, 100, 150, 200, 250, 300]
 
-    print("running UCT")
-    uct_results = evaluate_solver(GenericSolver, iterations_list, goals)
+    # print("running UCT")
+    # uct_results = evaluate_solver(GenericSolver, iterations_list, goals)
 
-    # print("running MENTS")
-    # ments_results = evaluate_solver(MentSolver, iterations_list, goals)
+    print("running MENTS")
+    ments_results = evaluate_solver(MentSolver, iterations_list, goals)

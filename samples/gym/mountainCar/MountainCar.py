@@ -27,12 +27,13 @@ def evaluate_solver(solver_class, iterations_list, trials=10):
             total_reward = 0
             step_count = 0
             done = False
+            max_step = 4000
             trunc = False
 
-            while not done and not trunc:
+            while not done and step_count < max_step:
                 solver.run_search(iterations)
                 best_action = solver.do_best_action(solver.root())
-                state, reward, done, trunc, _ = gym_mdp.step(best_action)
+                state, reward, done, _, _ = gym_mdp.step(best_action)
                 total_reward += reward
                 step_count += 1
 
@@ -81,11 +82,11 @@ def evaluate_solver(solver_class, iterations_list, trials=10):
 if __name__ == "__main__":
     iterations_list = [1, 2, 3, 5, 10, 50, 100, 500, 1000, 1500, 2000]
 
-    # print("running UCT")
-    # uct_results = evaluate_solver(GenericSolver, iterations_list)
-    # print("UCT Results:", uct_results)
+    print("running UCT")
+    uct_results = evaluate_solver(GenericSolver, iterations_list)
+    print("UCT Results:", uct_results)
 
-    print("running MENTS")
-    ments_results = evaluate_solver(MentSolver, iterations_list)
-    print("MENTS Results:", ments_results)
+    # print("running MENTS")
+    # ments_results = evaluate_solver(MentSolver, iterations_list)
+    # print("MENTS Results:", ments_results)
 

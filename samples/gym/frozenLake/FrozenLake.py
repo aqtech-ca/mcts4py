@@ -86,8 +86,8 @@ def evaluate_solver(solver_class, iterations_list, trials=10, is_slippery=False,
 
 
 if __name__ == "__main__":
-    iterations_list = [1, 2, 3, 5, 10, 20, 30, 50, 100, 150, 200, 500, 1000, 1500, 2000, 2500]
-    map_name = '8x8'
+    iterations_list = [1, 2, 3, 5, 10, 50, 100, 150, 200]
+    map_name = '4x4'
 
     # print("running MENTS with BTS")
     # bts_results = evaluate_solver(MentSolverWithBTS, iterations_list, is_slippery=True)

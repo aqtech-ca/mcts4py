@@ -10,46 +10,6 @@ from mcts4py.MDP import MDP
 from mcts4py.Types import TState
 
 
-def simulate_step(state, action):
-    gravity = 9.8
-    masscart = 1.0
-    masspole = 0.1
-    total_mass = masspole + masscart
-    length = 0.5
-    polemass_length = masspole * length
-    force_mag = 10.0
-    tau = 0.02
-    kinematics_integrator = "euler"
-
-    x, x_dot, theta, theta_dot = state
-    force = force_mag if action == 1 else -force_mag
-    costheta = math.cos(theta)
-    sintheta = math.sin(theta)
-
-    temp = (force + polemass_length * theta_dot ** 2 * sintheta) / total_mass
-    thetaacc = (gravity * sintheta - costheta * temp) / (
-                length * (4.0 / 3.0 - masspole * costheta ** 2 / total_mass))
-    xacc = temp - polemass_length * thetaacc * costheta / total_mass
-
-    if kinematics_integrator == "euler":
-        x = x + tau * x_dot
-        x_dot = x_dot + tau * xacc
-        theta = theta + tau * theta_dot
-        theta_dot = theta_dot + tau * thetaacc
-    else:
-        x_dot = x_dot + tau * xacc
-        x = x + tau * x_dot
-        theta_dot = theta_dot + tau * thetaacc
-        theta = theta + tau * theta_dot
-
-    new_state = (x, x_dot, theta, theta_dot)
-    done = (theta < -np.pi / 4 or theta > np.pi / 4 or x < -2.4 or x > 2.4)
-
-    reward = 0 if done else 1
-
-    return new_state, reward, done
-
-
 class CartPoleMDP(MDP, gym.Wrapper):
     def __init__(self):
         super(CartPoleMDP, self).__init__(gym.make("CartPole-v1", render_mode='human'))
@@ -59,11 +19,13 @@ class CartPoleMDP(MDP, gym.Wrapper):
         return self.initial
 
     def transition(self, state: Any, action: int) -> Any:
-        new_state, reward, done = simulate_step(state, action)
+        new_state, reward, done = self.simulate_step(state, action)
         return new_state
 
     def reward(self, previous_state: Optional[Any], action: Optional[int]) -> float:
-        new_state, reward, done = simulate_step(previous_state, action)
+        if previous_state is None:
+            return 0
+        new_state, reward, done = self.simulate_step(previous_state, action)
         return reward
 
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, bool, dict]:
@@ -79,4 +41,32 @@ class CartPoleMDP(MDP, gym.Wrapper):
                 dpw_alpha=1, min_action=False) -> List[int]:
         return [0, 1]
 
+    def simulate_step(self, state, action):
 
+        x, x_dot, theta, theta_dot = state
+        force = self.force_mag if action == 1 else - self.force_mag
+        costheta = math.cos(theta)
+        sintheta = math.sin(theta)
+
+        temp = (force + self.polemass_length * theta_dot ** 2 * sintheta) / self.total_mass
+        thetaacc = (self.gravity * sintheta - costheta * temp) / (
+                self.length * (4.0 / 3.0 - self.masspole * costheta ** 2 / self.total_mass))
+        xacc = temp - self.polemass_length * thetaacc * costheta / self.total_mass
+
+        if self.kinematics_integrator == "euler":
+            x = x + self.tau * x_dot
+            x_dot = x_dot + self.tau * xacc
+            theta = theta + self.tau * theta_dot
+            theta_dot = theta_dot + self.tau * thetaacc
+        else:
+            x_dot = x_dot + self.tau * xacc
+            x = x + self.tau * x_dot
+            theta_dot = theta_dot + self.tau * thetaacc
+            theta = theta + self.tau * theta_dot
+
+        new_state = (x, x_dot, theta, theta_dot)
+        done = (theta < -np.pi / 4 or theta > np.pi / 4 or x < -2.4 or x > 2.4)
+
+        reward = 0 if done else 1
+
+        return new_state, reward, done
