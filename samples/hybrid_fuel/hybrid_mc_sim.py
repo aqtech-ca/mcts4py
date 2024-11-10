@@ -17,7 +17,7 @@ def random_policy(state: VehicleState) -> VehicleAction:
 
     return action
 
-def simple_policy(state: VehicleState) -> VehicleAction:
+def greedy_policy(state: VehicleState) -> VehicleAction:
     if state.scenario == "gas_efficient" or state.battery == 0:
         gas_amount = RESOURCE_INC
         electric_amount = 0

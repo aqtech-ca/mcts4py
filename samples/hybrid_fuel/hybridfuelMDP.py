@@ -13,7 +13,7 @@ ELECTRIC_MILEAGE = 10 #dist per unit of electricity
 LOW_MILEAGE = 1 #dist per unit of gas or anything
 
 GAS_CAPACITY = 20
-ELECTRIC_CAPACITY = 10
+ELECTRIC_CAPACITY = 40
 REGEN_BATTERY_INC = 2
 
 RESOURCE_INC = 2
@@ -102,7 +102,7 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
             electric_mileage = ELECTRIC_MILEAGE
             return gas_mileage*gas_usage + electric_mileage*electric_usage
         else: # regen braking
-            return REGEN_BATTERY_INC
+            return 0.0
         
     def actions(self, state: VehicleState, state_visit=0, iteration_number=0, max_iteration_number=0,
                 dpw_exploration=1, dpw_alpha=1, min_action=False) -> List[str]:
