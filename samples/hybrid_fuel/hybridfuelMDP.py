@@ -90,21 +90,20 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         if not previous_state or not action:
             return 0
         
-        if previous_state.scenario == 'gas_efficient':
-            self.gas_mileage = GAS_MILEAGE
-            self.electric_mileage = LOW_MILEAGE
-        elif previous_state.scenario == 'electric_efficient':
-            self.gas_mileage = LOW_MILEAGE
-            self.electric_mileage = ELECTRIC_MILEAGE
-        else:
-            previous_state.gas_mileage = LOW_MILEAGE
-            self.electric_mileage = LOW_MILEAGE
-
         gas_usage = min(previous_state.fuel, action.gas)
         electric_usage = min(previous_state.battery, action.electricity)
 
-        return self.gas_mileage*gas_usage + self.electric_mileage*electric_usage 
-
+        if previous_state.scenario == 'gas_efficient':
+            gas_mileage = GAS_MILEAGE
+            electric_mileage = LOW_MILEAGE
+            return gas_mileage*gas_usage + electric_mileage*electric_usage 
+        elif previous_state.scenario == 'electric_efficient':
+            gas_mileage = LOW_MILEAGE
+            electric_mileage = ELECTRIC_MILEAGE
+            return gas_mileage*gas_usage + electric_mileage*electric_usage
+        else: # regen braking
+            return REGEN_BATTERY_INC
+        
     def actions(self, state: VehicleState, state_visit=0, iteration_number=0, max_iteration_number=0,
                 dpw_exploration=1, dpw_alpha=1, min_action=False) -> List[str]:
         available_actions = []
