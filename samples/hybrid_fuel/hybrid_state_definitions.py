@@ -6,11 +6,11 @@ GAS_CAPACITY = 20
 ELECTRIC_CAPACITY = 40
 REGEN_BATTERY_INC = 2
 
-RESOURCE_INC = 2
+RESOURCE_INC = 4
 TIME_STEPS = 20
 
-MC_ITER = 20
-MCTS_IERS = 499
+MC_ITER = 99
+MCTS_IERS = 99
 
 class VehicleState:
     """
@@ -32,7 +32,7 @@ class VehicleState:
         self.scenario = scenario
 
     def __repr__(self):
-        return f"VehicleState(fuel={self.fuel}, battery={self.battery}, time_step={self.time_step}, scenario={self.scenario})"
+        return f"VehicleState(fuel={self.fuel}, battery={self.battery}, time_remaining={self.time_remaining}, scenario={self.scenario})"
 
 class VehicleAction():
     def __init__(self, gas: float, electricity: float):

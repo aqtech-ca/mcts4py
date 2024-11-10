@@ -12,12 +12,20 @@ def mcts_policy(state: VehicleState, mdp) -> VehicleAction:
 
     if state.scenario == "regenerative_braking":
         return VehicleAction(gas=0.0, electricity=0.0)
+    
+    if state.fuel == 0.0:
+        electricity_amount = min(state.battery, RESOURCE_INC)
+        return VehicleAction(gas=0.0, electricity=electricity_amount)
+    
+    if state.battery == 0.0:
+        gas_amount = min(state.fuel, RESOURCE_INC)
+        return VehicleAction(gas=gas_amount, electricity=0.0)
 
     solver = StatefulSolver(
         mdp,
         simulation_depth_limit = state.time_remaining,
-        exploration_constant = 1.0,
-        discount_factor = 1.0,
+        exploration_constant = 999.0,
+        discount_factor = 0.99,
         verbose = False)
     
     solver.run_search(MCTS_IERS)
@@ -35,6 +43,7 @@ def mcts_policy(state: VehicleState, mdp) -> VehicleAction:
     #     print("-----")
 
     max_uct_node = max(nodes_from_root, key=lambda node: solver.calculate_uct(node))
+    ucts = [solver.calculate_uct(node) for node in nodes_from_root]
     # print(max_uct_node)
     # print(solver.calculate_uct(nodes_from_root[0]))
     # print(solver.calculate_uct(nodes_from_root[1]))
@@ -58,7 +67,6 @@ def sim_hybrid_mdp(mdp: HybridVehicleMDP, time_steps: int = 200, policy=random_p
         if available_actions:
             
             action = policy(current_state, mdp=mdp)
-
             reward = mdp.reward(current_state, action, current_state) # hacky here
             rewards.append(reward)
             if verbose: print(f"Step {t}: Action={action}, \n State={current_state}, \n Reward={reward:.3f} \n ---")

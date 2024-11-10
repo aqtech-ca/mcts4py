@@ -106,7 +106,7 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
 
         action_greedy = greedy_logic(state)
 
-        alternative_regime = "electric_efficient" if state.scenario =="gas_efficient" else "gas_efficient"
+        alternative_regime = "electric_efficient" if state.scenario == "gas_efficient" else "gas_efficient"
         action_alternative = greedy_logic(VehicleState(fuel=state.fuel, battery=state.battery, scenario=alternative_regime))
 
         # if 0 <= state.fuel < RESOURCE_INC:
@@ -122,8 +122,8 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         #     electricity_max = RESOURCE_INC
 
         available_actions = [# VehicleAction(gas=gas_min, electricity=electricity_min),
-                            action_greedy,
-                            action_alternative]
+                            action_alternative,
+                            action_greedy]
                             # VehicleAction(gas=gas_max, electricity=electricity_min),
                             # VehicleAction(gas=gas_min, electricity=electricity_max)]
         
