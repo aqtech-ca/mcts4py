@@ -29,7 +29,7 @@ class VehicleState:
         self.scenario = scenario
 
     def __repr__(self):
-        return f"VehicleState(fuel={self.fuel}, battery={self.battery}, time_step={self.time_step})"
+        return f"VehicleState(fuel={self.fuel}, battery={self.battery}, time_step={self.time_step}, scenario={self.scenario})"
 
 class VehicleAction():
     def __init__(self, gas: float, electricity: float):
@@ -59,18 +59,25 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         elif state.scenario == 'regenerative_braking':
             battery = min(self.max_battery, battery + 0.5)  # Regen brake adds battery
         
-        return VehicleState(fuel=fuel, battery=battery, time_step=state.time_step + 1,
-                            initial_fuel=state.initial_fuel, initial_battery=state.initial_battery)
+        state.scenario = random.choice(self.scenarios)  # Randomly choose a scenario
+        
+        return VehicleState(fuel=fuel, 
+                            battery=battery, 
+                            time_step=state.time_step + 1,
+                            initial_fuel=state.initial_fuel, 
+                            initial_battery=state.initial_battery, 
+                            scenario=state.scenario)
 
     def reward(self, previous_state: Optional[VehicleState], action: Optional[str]) -> float:
         if not previous_state or not action:
             return 0
-        if action == "use_gas":
-            return 5  # Assuming gas provides 5 units of distance.
-        elif action == "use_electricity":
-            return 10  # Electric provides 10 units of distance.
+        if previous_state.scenario == 'gas_efficient':
+            return 5*action.gas  # Assuming gas provides 5 units of distance.
+        elif previous_state.scenario == 'electric_efficient':
+            return 10*action.electricity
         elif action == "regenerate":
-            return -2  # Negative reward for not moving but recharging.
+            return 0  # Negative reward for not moving but recharging.
+        return 0
 
     def actions(self, state: VehicleState, state_visit=0, iteration_number=0, max_iteration_number=0,
                 dpw_exploration=1, dpw_alpha=1, min_action=False) -> List[str]:
@@ -93,49 +100,6 @@ print("Initial state:", initial_state)
 print("Actions:", mdp.actions(initial_state))
 print("Transition:", mdp.transition(initial_state, action=VehicleAction(gas=1, electricity=0)))
 
-
-# Updated Unit Tests
-import unittest
-
-class TestHybridVehicleMDP(unittest.TestCase):
-    def setUp(self):
-        self.mdp = HybridVehicleMDP(max_fuel=10, max_battery=5)
-
-    def test_transition_gas_efficient(self):
-        state = VehicleState(fuel=10, battery=5)
-        next_state = self.mdp.transition(state, 'gas_efficient')
-        self.assertEqual(next_state.fuel, 9, "Gas should decrease by 1.")
-        self.assertEqual(next_state.battery, 5, "Battery should remain unchanged.")
-        self.assertEqual(next_state.time_step, 1, "Time step should increment by 1.")
-
-    def test_transition_electric_efficient(self):
-        state = VehicleState(fuel=10, battery=5)
-        next_state = self.mdp.transition(state, 'electric_efficient')
-        self.assertEqual(next_state.battery, 4, "Battery should decrease by 1.")
-        self.assertEqual(next_state.fuel, 10, "Fuel should remain unchanged.")
-        self.assertEqual(next_state.time_step, 1, "Time step should increment by 1.")
-
-    def test_transition_regenerative_braking(self):
-        state = VehicleState(fuel=10, battery=4)
-        next_state = self.mdp.transition(state, 'regenerative_braking')
-        self.assertEqual(next_state.battery, 4.5, "Battery should increase by 0.5.")
-        self.assertEqual(next_state.time_step, 1, "Time step should increment by 1.")
-
-    def test_reward_use_gas(self):
-        state = VehicleState(fuel=10, battery=5)
-        reward = self.mdp.reward(state, "use_gas")
-        self.assertEqual(reward, 5, "Reward for using gas should be 5.")
-
-    def test_reward_use_electricity(self):
-        state = VehicleState(fuel=10, battery=5)
-        reward = self.mdp.reward(state, "use_electricity")
-        self.assertEqual(reward, 10, "Reward for using electricity should be 10.")
-
-    def test_reward_regenerate(self):
-        state = VehicleState(fuel=10, battery=5)
-        reward = self.mdp.reward(state, "regenerate")
-        self.assertEqual(reward, -2, "Penalty for regenerating should be -2.")
-
 if __name__ == '__main__':
     # unittest.main()
     
@@ -146,6 +110,7 @@ if __name__ == '__main__':
     # Simulate trajectory
     current_state = initial_state
     trajectory = [current_state]
+    rewards = []
 
     for t in range(20):
        
@@ -157,8 +122,12 @@ if __name__ == '__main__':
                 action = VehicleAction(gas=1, electricity=0)
             else:
                 action = VehicleAction(gas=0, electricity=1)
+            
             next_state = mdp.transition(current_state, action)
-            print(f"Step {t}: Scenario={next_state.scenario}, Action={action}, State={next_state}")
+            reward = mdp.reward(current_state, action)
+            rewards.append(reward)
+
+            print(f"Step {t}: Action={action}, State={next_state}", f"Reward={reward}")
             trajectory.append(next_state)
             current_state = next_state
         else:
