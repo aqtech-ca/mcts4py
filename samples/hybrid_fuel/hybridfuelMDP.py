@@ -3,55 +3,48 @@ from typing import Generic, TypeVar, Optional, List, Tuple
 import random
 from mcts4py.MDP import *
 import numpy as np
+from samples.hybrid_fuel.hybrid_state_definitions import *
 
 TState = TypeVar('TState')
 TAction = TypeVar('TAction')
 TRandom = TypeVar('TRandom')
 
-GAS_MILEAGE = 10 # dist per unit of gas
-ELECTRIC_MILEAGE = 10 #dist per unit of electricity
-LOW_MILEAGE = 1 #dist per unit of gas or anything
 
-GAS_CAPACITY = 20
-ELECTRIC_CAPACITY = 40
-REGEN_BATTERY_INC = 2
+def random_logic(state: VehicleState) -> VehicleAction:
+    lower_gas = 0
+    upper_gas = min(state.fuel, RESOURCE_INC)
+    gas_amount = random.uniform(lower_gas, upper_gas)
 
-RESOURCE_INC = 2
-TIME_STEPS = 50
+    lower_electric = 0
+    upper_electric = min(state.battery, RESOURCE_INC-gas_amount)
 
-MC_ITER = 100
+    # electric_amount = random.uniform(lower_electric, upper_electric)
+    electric_amount = upper_electric
+    action = VehicleAction(gas=gas_amount, electricity=electric_amount)
 
-class VehicleState:
-    """
-    Represents the state of the hybrid vehicle.
-    
-    Attributes:
-        fuel (float): Current fuel level.
-        battery (float): Current battery level.
-        time_step (int): Current time increment in the simulation.
-        initial_fuel (float): Initial fuel level for reference.
-        initial_battery (float): Initial battery level for reference.
-    """
-    
+    # Quick renormalize
 
-    def __init__(self, fuel: float, battery: float, time_step: int = 0, initial_fuel: float = 0, initial_battery: float = 0, scenario='gas_efficient'):
-        self.fuel = fuel
-        self.battery = battery
-        self.time_step = time_step
-        self.initial_fuel = initial_fuel
-        self.initial_battery = initial_battery
-        self.scenario = scenario
+    return action
 
-    def __repr__(self):
-        return f"VehicleState(fuel={self.fuel}, battery={self.battery}, time_step={self.time_step}, scenario={self.scenario})"
-
-class VehicleAction():
-    def __init__(self, gas: float, electricity: float):
-        self.gas = gas
-        self.electricity = electricity
-    
-    def __str__(self):
-        return f"VehicleAction(gas={self.gas:.3f}, electricity={self.electricity:.3f})"
+def greedy_logic(state: VehicleState) -> VehicleAction:
+    if state.scenario == "gas_efficient" or state.battery == 0:
+        gas_amount = RESOURCE_INC
+        electric_amount = 0
+        if 0 <= state.fuel < RESOURCE_INC:
+            gas_amount = state.fuel
+            if state.battery > 0:
+                electric_amount = min(state.battery, RESOURCE_INC-gas_amount)
+    elif state.scenario == "electric_efficient" or state.fuel == 0:
+        gas_amount = 0
+        electric_amount = RESOURCE_INC
+        if 0 <= state.battery < RESOURCE_INC:
+            electric_amount = state.battery
+            if state.battery > 0:
+                gas_amount = min(state.fuel, RESOURCE_INC-electric_amount)
+    else:
+        return random_logic(state)
+    # Default action if no efficient scenario or insufficient resources
+    return VehicleAction(gas=gas_amount, electricity=electric_amount)
 
 
 class HybridVehicleMDP(MDP[VehicleState, str]):
@@ -81,12 +74,10 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         
         return VehicleState(fuel=fuel, 
                             battery=battery, 
-                            time_step=state.time_step + 1,
-                            initial_fuel=state.initial_fuel, 
-                            initial_battery=state.initial_battery, 
+                            time_remaining = state.time_remaining - 1,
                             scenario=state.scenario)
 
-    def reward(self, previous_state: Optional[VehicleState], action: Optional[str]) -> float:
+    def reward(self, previous_state: Optional[VehicleState], action: Optional[str], next_state: Optional[VehicleState]) -> float:
         if not previous_state or not action:
             return 0
         
@@ -106,15 +97,36 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         
     def actions(self, state: VehicleState, state_visit=0, iteration_number=0, max_iteration_number=0,
                 dpw_exploration=1, dpw_alpha=1, min_action=False) -> List[str]:
-        available_actions = []
-        if state.fuel > 0:
-            available_actions.append("use_gas")
-        if state.battery > 0:
-            available_actions.append("use_electricity")
-        if state.fuel < self.max_fuel:
-            available_actions.append("regenerate")
+        gas_min = 0.0
+        electricity_min = 0.0
+
+        action_greedy = greedy_logic(state)
+
+        alternative_regime = "electric_efficient" if state.scenario =="gas_efficient" else "gas_efficient"
+        action_alternative = greedy_logic(VehicleState(fuel=state.fuel, battery=state.battery, scenario=alternative_regime))
+
+        if 0 <= state.fuel < RESOURCE_INC:
+            gas_max = state.fuel
+            electricity_min = RESOURCE_INC - gas_max
+        else:
+            gas_max = RESOURCE_INC
+        
+        if 0 <= state.battery < RESOURCE_INC:
+            electricity_max = state.battery
+            gas_min = RESOURCE_INC - electricity_max
+        else:
+            electricity_max = RESOURCE_INC
+
+        available_actions = [# VehicleAction(gas=gas_min, electricity=electricity_min),
+                            action_greedy,
+                            action_alternative,
+                            VehicleAction(gas=0.0, electricity=0.0)]
+                            # VehicleAction(gas=gas_max, electricity=electricity_min),
+                            # VehicleAction(gas=gas_min, electricity=electricity_max)]
+        
         return available_actions
 
     def is_terminal(self, state: VehicleState) -> bool:
-        return state.fuel <= 0 and state.battery <= 0
+        return state.time_remaining == 0
+
 

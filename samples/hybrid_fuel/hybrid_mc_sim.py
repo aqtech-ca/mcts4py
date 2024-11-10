@@ -1,42 +1,48 @@
 from samples.hybrid_fuel.hybridfuelMDP import *
+from mcts4py.StatefulSolver import *
+from samples.hybrid_fuel.hybrid_state_definitions import *
 
+def random_policy(state: VehicleState, mdp: HybridVehicleMDP) -> VehicleAction:
+    return random_logic(state)
 
-def random_policy(state: VehicleState) -> VehicleAction:
-    lower_gas = 0
-    upper_gas = min(state.fuel, RESOURCE_INC)
-    gas_amount = random.uniform(lower_gas, upper_gas)
+def greedy_policy(state: VehicleState, mdp: HybridVehicleMDP) -> VehicleAction:
+    return greedy_logic(state)
 
-    lower_electric = 0
-    upper_electric = min(state.battery, RESOURCE_INC-gas_amount)
+def mcts_policy(state: VehicleState, mdp) -> VehicleAction:
 
-    # electric_amount = random.uniform(lower_electric, upper_electric)
-    electric_amount = upper_electric
-    action = VehicleAction(gas=gas_amount, electricity=electric_amount)
+    if state.scenario == "regenerative_braking":
+        return VehicleAction(gas=0.0, electricity=0.0)
 
-    # Quick renormalize
+    solver = StatefulSolver(
+        mdp,
+        simulation_depth_limit = TIME_STEPS,
+        exploration_constant = 9.0,
+        discount_factor = 0.99,
+        verbose = False)
+    
+    solver.run_search(MCTS_IERS)
 
-    return action
+    # print("\nSearch Tree:")
+    # solver.display_tree()
+    # print(solver.calculate_uct(solver.root()))
 
-def greedy_policy(state: VehicleState) -> VehicleAction:
-    if state.scenario == "gas_efficient" or state.battery == 0:
-        gas_amount = RESOURCE_INC
-        electric_amount = 0
-        if 0 <= state.fuel < RESOURCE_INC:
-            gas_amount = state.fuel
-            if state.battery > 0:
-                electric_amount = min(state.battery, RESOURCE_INC-gas_amount)
-    elif state.scenario == "electric_efficient" or state.fuel == 0:
-        gas_amount = 0
-        electric_amount = RESOURCE_INC
-        if 0 <= state.battery < RESOURCE_INC:
-            electric_amount = state.battery
-            if state.battery > 0:
-                gas_amount = min(state.fuel, RESOURCE_INC-electric_amount)
-    else:
-        return random_policy(state)
-    # Default action if no efficient scenario or insufficient resources
-    return VehicleAction(gas=gas_amount, electricity=electric_amount)
+    nodes_from_root = solver.root().children
+    # for node in nodes_from_root:
+    #     print(node)
+    #     print(node.state)
+    #     print(node.inducing_action)
+    #     print(node.parent)
+    #     print("-----")
 
+    max_uct_node = max(nodes_from_root, key=lambda node: solver.calculate_uct(node))
+    # print(max_uct_node)
+    # print(solver.calculate_uct(nodes_from_root[0]))
+    # print(solver.calculate_uct(nodes_from_root[1]))
+    # print(solver.calculate_uct(nodes_from_root[2]))
+
+    return max_uct_node.inducing_action
+
+# simulation function
 def sim_hybrid_mdp(mdp: HybridVehicleMDP, time_steps: int = 200, policy=random_policy, verbose=False):
     
     initial_state = mdp.initial_state()
@@ -51,16 +57,14 @@ def sim_hybrid_mdp(mdp: HybridVehicleMDP, time_steps: int = 200, policy=random_p
         
         if available_actions:
             
-            action = policy(current_state)
+            action = policy(current_state, mdp=mdp)
 
-            
-            reward = mdp.reward(current_state, action)
+            reward = mdp.reward(current_state, action, current_state) # hacky here
             rewards.append(reward)
             if verbose: print(f"Step {t}: Action={action}, \n State={current_state}, \n Reward={reward:.3f} \n ---")
 
             next_state = mdp.transition(current_state, action)
 
-            
             trajectory.append(next_state)
             current_state = next_state
         else:
@@ -68,3 +72,4 @@ def sim_hybrid_mdp(mdp: HybridVehicleMDP, time_steps: int = 200, policy=random_p
             break
     
     return trajectory, rewards
+

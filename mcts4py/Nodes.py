@@ -52,7 +52,6 @@ class StateNode(Generic[TState, TAction], Node[TAction]):
         self.is_terminal = is_terminal
         self.ments_value = 0.0
         
-
         super().__init__(parent, inducing_action)
 
     def get_parent(self: TStateNode) -> Optional[TStateNode]:
