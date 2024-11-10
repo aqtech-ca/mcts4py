@@ -7,6 +7,14 @@ TState = TypeVar('TState')
 TAction = TypeVar('TAction')
 TRandom = TypeVar('TRandom')
 
+GAS_MILEAGE = 5 # dist per unit of gas
+ELECTRIC_MILEAGE = 10 #dist per unit of electricity
+LOW_MILEAGE = 1 #dist per unit of gas or anything
+
+GAS_CAPACITY = 20
+ELECTRIC_CAPACITY = 10
+REGEN_BATTERY_INC = 2
+
 class VehicleState:
     """
     Represents the state of the hybrid vehicle.
@@ -57,7 +65,7 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         elif state.scenario == 'electric_efficient' and battery > 0:
             battery -= min(1, action.electricity)  # Consume electricity
         elif state.scenario == 'regenerative_braking':
-            battery = min(self.max_battery, battery + 0.5)  # Regen brake adds battery
+            battery = min(self.max_battery, battery + REGEN_BATTERY_INC)  # Regen brake adds battery
         
         state.scenario = random.choice(self.scenarios)  # Randomly choose a scenario
         
@@ -72,11 +80,9 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         if not previous_state or not action:
             return 0
         if previous_state.scenario == 'gas_efficient':
-            return 5*action.gas  # Assuming gas provides 5 units of distance.
+            return GAS_MILEAGE*action.gas + LOW_MILEAGE*action.electricity # Assuming gas provides 5 units of distance.
         elif previous_state.scenario == 'electric_efficient':
-            return 10*action.electricity
-        elif action == "regenerate":
-            return 0  # Negative reward for not moving but recharging.
+            return LOW_MILEAGE*action.gas + ELECTRIC_MILEAGE*action.electricity
         return 0
 
     def actions(self, state: VehicleState, state_visit=0, iteration_number=0, max_iteration_number=0,
@@ -117,12 +123,22 @@ if __name__ == '__main__':
         available_actions = mdp.actions(current_state)
         
         if available_actions:
-            random_fuel_choice = random.choice([0, 1])  # Randomly pick an available action
-            if random_fuel_choice == 0:
-                action = VehicleAction(gas=1, electricity=0)
-            else:
-                action = VehicleAction(gas=0, electricity=1)
+            # random_fuel_choice = random.choice([0, 1])  # Randomly pick an available action
+            # if random_fuel_choice == 0:
+            #     action = VehicleAction(gas=1, electricity=0)
+            # else:
+            #     action = VehicleAction(gas=0, electricity=1)
             
+            lower_gas = 0
+            upper_gas = GAS_CAPACITY - current_state.fuel
+            lower_electric = 0
+            upper_electric = ELECTRIC_CAPACITY - current_state.battery
+            
+            gas_amount = random.uniform(lower_gas, upper_gas)
+            electric_amount = random.uniform(lower_electric, upper_electric)
+
+            action = VehicleAction(gas=gas_amount, electricity=electric_amount)
+
             next_state = mdp.transition(current_state, action)
             reward = mdp.reward(current_state, action)
             rewards.append(reward)
