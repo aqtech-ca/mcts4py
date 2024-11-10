@@ -15,9 +15,9 @@ def mcts_policy(state: VehicleState, mdp) -> VehicleAction:
 
     solver = StatefulSolver(
         mdp,
-        simulation_depth_limit = TIME_STEPS,
-        exploration_constant = 9.0,
-        discount_factor = 0.99,
+        simulation_depth_limit = state.time_remaining,
+        exploration_constant = 1.0,
+        discount_factor = 1.0,
         verbose = False)
     
     solver.run_search(MCTS_IERS)

@@ -100,27 +100,30 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         gas_min = 0.0
         electricity_min = 0.0
 
+        if state.scenario == "regenerative_braking":
+            available_actions = [VehicleAction(gas=0.0, electricity=0.0)]
+            return available_actions
+
         action_greedy = greedy_logic(state)
 
         alternative_regime = "electric_efficient" if state.scenario =="gas_efficient" else "gas_efficient"
         action_alternative = greedy_logic(VehicleState(fuel=state.fuel, battery=state.battery, scenario=alternative_regime))
 
-        if 0 <= state.fuel < RESOURCE_INC:
-            gas_max = state.fuel
-            electricity_min = RESOURCE_INC - gas_max
-        else:
-            gas_max = RESOURCE_INC
+        # if 0 <= state.fuel < RESOURCE_INC:
+        #     gas_max = state.fuel
+        #     electricity_min = RESOURCE_INC - gas_max
+        # else:
+        #     gas_max = RESOURCE_INC
         
-        if 0 <= state.battery < RESOURCE_INC:
-            electricity_max = state.battery
-            gas_min = RESOURCE_INC - electricity_max
-        else:
-            electricity_max = RESOURCE_INC
+        # if 0 <= state.battery < RESOURCE_INC:
+        #     electricity_max = state.battery
+        #     gas_min = RESOURCE_INC - electricity_max
+        # else:
+        #     electricity_max = RESOURCE_INC
 
         available_actions = [# VehicleAction(gas=gas_min, electricity=electricity_min),
                             action_greedy,
-                            action_alternative,
-                            VehicleAction(gas=0.0, electricity=0.0)]
+                            action_alternative]
                             # VehicleAction(gas=gas_max, electricity=electricity_min),
                             # VehicleAction(gas=gas_min, electricity=electricity_max)]
         

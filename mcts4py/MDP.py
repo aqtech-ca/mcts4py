@@ -1,15 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Generic, Optional
-
 from mcts4py.Types import TAction, TState, TRandom
-
 
 class MDP(ABC, Generic[TState, TAction]):
 
     @abstractmethod
     def transition(self, state: TState, random: TRandom) -> TState:
         raise NotImplementedError
-
+    
     @abstractmethod
     def reward(self, previous_state: Optional[TState], action: Optional[TAction]) -> float:
         raise NotImplementedError
