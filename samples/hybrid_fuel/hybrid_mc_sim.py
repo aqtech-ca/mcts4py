@@ -20,36 +20,46 @@ def mcts_policy(state: VehicleState, mdp) -> VehicleAction:
     if state.battery == 0.0:
         gas_amount = min(state.fuel, RESOURCE_INC)
         return VehicleAction(gas=gas_amount, electricity=0.0)
-
-    solver = StatefulSolver(
-        mdp,
-        simulation_depth_limit = state.time_remaining,
-        exploration_constant = 999.0,
-        discount_factor = 0.99,
-        verbose = False)
     
-    solver.run_search(MCTS_IERS)
+    if state.time_remaining < 3:
+        return greedy_logic(state)
 
-    # print("\nSearch Tree:")
-    # solver.display_tree()
-    # print(solver.calculate_uct(solver.root()))
+    else:
+        mdp_clone = copy.deepcopy(mdp)
+        mdp_clone.set_initial_state(state)
 
-    nodes_from_root = solver.root().children
-    # for node in nodes_from_root:
-    #     print(node)
-    #     print(node.state)
-    #     print(node.inducing_action)
-    #     print(node.parent)
-    #     print("-----")
+        solver = StatefulSolver(
+            mdp_clone,
+            simulation_depth_limit = state.time_remaining,
+            exploration_constant = 0.5,
+            discount_factor = 0.99,
+            max_iteration = 99,
+            alpha_value=0.1,
+            exploration_constant_decay=0.9,
+            verbose = True)
+        
+        solver.run_search(MCTS_IERS)
 
-    max_uct_node = max(nodes_from_root, key=lambda node: solver.calculate_uct(node))
-    ucts = [solver.calculate_uct(node) for node in nodes_from_root]
-    # print(max_uct_node)
-    # print(solver.calculate_uct(nodes_from_root[0]))
-    # print(solver.calculate_uct(nodes_from_root[1]))
-    # print(solver.calculate_uct(nodes_from_root[2]))
+        print("\nSearch Tree:")
+        solver.display_tree()
+        # print(solver.calculate_uct(solver.root()))
 
-    return max_uct_node.inducing_action
+        nodes_from_root = solver.root().children
+        # for node in nodes_from_root:
+        #     print(node)
+        #     print(node.state)
+        #     print(node.inducing_action)
+        #     print(node.parent)
+        #     print("-----")
+
+        max_uct_node = max(nodes_from_root, key=lambda node: solver.calculate_uct(node))
+        ucts = [solver.calculate_uct(node) for node in nodes_from_root]
+        # print(max_uct_node)
+        # print(solver.calculate_uct(nodes_from_root[0]))
+        # print(solver.calculate_uct(nodes_from_root[1]))
+        # print(solver.calculate_uct(nodes_from_root[2]))
+
+        return max_uct_node.inducing_action
 
 # simulation function
 def sim_hybrid_mdp(mdp: HybridVehicleMDP, time_steps: int = 200, policy=random_policy, verbose=False):
@@ -64,9 +74,14 @@ def sim_hybrid_mdp(mdp: HybridVehicleMDP, time_steps: int = 200, policy=random_p
     for t in range(time_steps):
         available_actions = mdp.actions(current_state)
         
+        print("##########")
+        print("current state:", current_state)
         if available_actions:
             
             action = policy(current_state, mdp=mdp)
+            print(f"suggested action from {policy}:", action)
+            
+
             reward = mdp.reward(current_state, action, current_state) # hacky here
             rewards.append(reward)
             if verbose: print(f"Step {t}: Action={action}, \n State={current_state}, \n Reward={reward:.3f} \n ---")

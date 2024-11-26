@@ -54,11 +54,15 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         self.scenarios = ['gas_efficient', 'electric_efficient', 'regenerative_braking']
         self.gas_mileage = GAS_MILEAGE
         self.electric_mileage = ELECTRIC_MILEAGE
-        self.scenario = 'gas_efficient'
+        self.scenario = random.choice(self.scenarios) # Randomly choose a scenario
+        self.initial_state_obj = VehicleState(fuel=self.max_fuel, battery=self.max_battery, initial_fuel=self.max_fuel, initial_battery=self.max_battery, scenario=self.scenario)
     
     def initial_state(self) -> VehicleState:
-        scenario = random.choice(self.scenarios)  # Randomly choose a scenario
-        return VehicleState(fuel=self.max_fuel, battery=self.max_battery, initial_fuel=self.max_fuel, initial_battery=self.max_battery, scenario=scenario)
+        return self.initial_state_obj
+
+    def set_initial_state(self, state: VehicleState) -> VehicleState:
+        self.initial_state_obj = state
+        return self.initial_state_obj
 
     def transition(self, state: VehicleState, action: VehicleAction) -> VehicleState:
         fuel, battery = state.fuel, state.battery
@@ -109,23 +113,23 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         alternative_regime = "electric_efficient" if state.scenario == "gas_efficient" else "gas_efficient"
         action_alternative = greedy_logic(VehicleState(fuel=state.fuel, battery=state.battery, scenario=alternative_regime))
 
-        # if 0 <= state.fuel < RESOURCE_INC:
-        #     gas_max = state.fuel
-        #     electricity_min = RESOURCE_INC - gas_max
-        # else:
-        #     gas_max = RESOURCE_INC
+        if 0 <= state.fuel < RESOURCE_INC:
+            gas_max = state.fuel
+            electricity_min = RESOURCE_INC - gas_max
+        else:
+            gas_max = RESOURCE_INC
         
-        # if 0 <= state.battery < RESOURCE_INC:
-        #     electricity_max = state.battery
-        #     gas_min = RESOURCE_INC - electricity_max
-        # else:
-        #     electricity_max = RESOURCE_INC
+        if 0 <= state.battery < RESOURCE_INC:
+            electricity_max = state.battery
+            gas_min = RESOURCE_INC - electricity_max
+        else:
+            electricity_max = RESOURCE_INC
 
-        available_actions = [# VehicleAction(gas=gas_min, electricity=electricity_min),
-                            action_alternative,
-                            action_greedy]
-                            # VehicleAction(gas=gas_max, electricity=electricity_min),
-                            # VehicleAction(gas=gas_min, electricity=electricity_max)]
+        available_actions = [VehicleAction(gas=gas_min, electricity=electricity_min),
+                            # action_alternative,
+                            # action_greedy]
+                            VehicleAction(gas=gas_max, electricity=electricity_min),
+                            VehicleAction(gas=gas_min, electricity=electricity_max)]
         
         return available_actions
 
