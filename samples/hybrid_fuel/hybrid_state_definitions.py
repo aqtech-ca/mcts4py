@@ -1,16 +1,16 @@
-GAS_MILEAGE = 21 # dist per unit of gas
-ELECTRIC_MILEAGE =  19 #dist per unit of electricity
-LOW_MILEAGE = 18 #dist per unit of gas or anything
+GAS_MILEAGE = 10 # dist per unit of gas
+ELECTRIC_MILEAGE =  9 #dist per unit of electricity
+LOW_MILEAGE = 8 #dist per unit of gas or anything
 
-GAS_CAPACITY = 20
-ELECTRIC_CAPACITY = 40
+GAS_CAPACITY = 5
+ELECTRIC_CAPACITY = 5
 REGEN_BATTERY_INC = 2
 
 RESOURCE_INC = 4
 TIME_STEPS = 10
 
-MC_ITER = 1
-MCTS_IERS = 99
+MC_ITER = 20
+MCTS_IERS = 999
 
 class VehicleState:
     """

@@ -21,7 +21,10 @@ def mcts_policy(state: VehicleState, mdp) -> VehicleAction:
         gas_amount = min(state.fuel, RESOURCE_INC)
         return VehicleAction(gas=gas_amount, electricity=0.0)
     
-    if state.time_remaining < 3:
+    if state.scenario == "regenerative_braking":
+        return VehicleAction(gas=0.0, electricity=0.0)
+
+    if state.time_remaining < 2:
         return greedy_logic(state)
 
     else:
@@ -33,10 +36,10 @@ def mcts_policy(state: VehicleState, mdp) -> VehicleAction:
             simulation_depth_limit = state.time_remaining,
             exploration_constant = 0.5,
             discount_factor = 0.99,
-            max_iteration = 99,
+            # max_iteration = 9,
             alpha_value=0.1,
-            exploration_constant_decay=0.9,
-            verbose = True)
+            exploration_constant_decay=0.7,
+            verbose = False)
         
         solver.run_search(MCTS_IERS)
 
@@ -45,6 +48,7 @@ def mcts_policy(state: VehicleState, mdp) -> VehicleAction:
         # print(solver.calculate_uct(solver.root()))
 
         nodes_from_root = solver.root().children
+        print("solver root:", solver.root())
         # for node in nodes_from_root:
         #     print(node)
         #     print(node.state)

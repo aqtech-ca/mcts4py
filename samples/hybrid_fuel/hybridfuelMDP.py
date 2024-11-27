@@ -99,8 +99,7 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         else: # regen braking
             return 0.0
         
-    def actions(self, state: VehicleState, state_visit=0, iteration_number=0, max_iteration_number=0,
-                dpw_exploration=1, dpw_alpha=1, min_action=False) -> List[str]:
+    def actions(self, state: VehicleState) -> List[str]:
         gas_min = 0.0
         electricity_min = 0.0
 
@@ -125,11 +124,11 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         else:
             electricity_max = RESOURCE_INC
 
-        available_actions = [VehicleAction(gas=gas_min, electricity=electricity_min),
-                            # action_alternative,
-                            # action_greedy]
-                            VehicleAction(gas=gas_max, electricity=electricity_min),
-                            VehicleAction(gas=gas_min, electricity=electricity_max)]
+        available_actions = [# VehicleAction(gas=gas_min, electricity=electricity_min),
+                            action_alternative,
+                            action_greedy]
+                            # VehicleAction(gas=gas_max, electricity=electricity_min),
+                            # VehicleAction(gas=gas_min, electricity=electricity_max)]
         
         return available_actions
 
