@@ -1,16 +1,20 @@
-GAS_MILEAGE = 10 # dist per unit of gas
-ELECTRIC_MILEAGE =  9 #dist per unit of electricity
-LOW_MILEAGE = 8 #dist per unit of gas or anything
+import numpy as np
 
-GAS_CAPACITY = 5
-ELECTRIC_CAPACITY = 5
-REGEN_BATTERY_INC = 2
+GAS_MILEAGE = 30  # dist per unit of gas
+ELECTRIC_MILEAGE = 40  # dist per unit of electricity
+LOW_MILEAGE = 10  # dist per unit of gas or anything
 
-RESOURCE_INC = 4
-TIME_STEPS = 10
+GAS_CAPACITY = 20
+ELECTRIC_CAPACITY = 20
+REGEN_BATTERY_INC = 5
 
-MC_ITER = 20
-MCTS_IERS = 999
+RESOURCE_INC = 5
+TIME_STEPS = 16
+
+MYOPIC_THRESH = TIME_STEPS - 1
+
+MC_ITER = 99
+MCTS_IERS = 99
 
 class VehicleState:
     """
