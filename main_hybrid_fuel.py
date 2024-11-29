@@ -18,6 +18,7 @@ if __name__ == '__main__':
     mc_simple_pol = []
     mc_random_pol = []
     mc_mcts_pol = []
+    mc_policy_dic = []
     for i in tqdm(range(MC_ITER)):
         mdp = HybridVehicleMDP(max_fuel=GAS_CAPACITY, max_battery=ELECTRIC_CAPACITY)
         trajectory_simple_pol, rewards_simple_pol = sim_hybrid_mdp(mdp, time_steps=TIME_STEPS, policy=greedy_policy, verbose=False)
@@ -30,10 +31,15 @@ if __name__ == '__main__':
         mdp = HybridVehicleMDP(max_fuel=GAS_CAPACITY, max_battery=ELECTRIC_CAPACITY)
         trajectory_random_pol, rewards_random_pol = sim_hybrid_mdp(mdp, time_steps=TIME_STEPS, policy=mcts_policy, verbose=False)
         mc_mcts_pol.append(sum(rewards_random_pol))
+
+        mdp = HybridVehicleMDP(max_fuel=GAS_CAPACITY, max_battery=ELECTRIC_CAPACITY)
+        trajectory_random_pol, rewards_random_pol = sim_hybrid_mdp(mdp, time_steps=TIME_STEPS, policy=policy_lookup, verbose=False)
+        mc_policy_dic.append(sum(rewards_random_pol))
     
     print(f"sum of rewards - greedy policy: {np.mean(mc_simple_pol)}")
     print(f"sum of rewards - random_policy: {np.mean(mc_random_pol)}")
     print(f"sum of rewards - mcts_policy: {np.mean(mc_mcts_pol)}")
+    print(f"sum of rewards - policy_dic: {np.mean(mc_policy_dic)}")
 
     
     

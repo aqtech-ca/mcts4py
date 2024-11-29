@@ -64,8 +64,22 @@ def mcts_policy(state: VehicleState, mdp, verbose: bool = False) -> VehicleActio
         return max_uct_node.inducing_action
 
 
-def policy_dic(state):
-    policy_dic = pickle.load("saved_models/saved_policy.pkl")
+def policy_lookup(state, mdp: HybridVehicleMDP, policy_path="saved_models/hybrid_policy_tables.pkl"):
+    with open("saved_models/hybrid_policy_tables.pkl", "rb") as file:
+        policy_dic = pickle.load(file)
+
+    time = TIME_STEPS - state.time_remaining
+    fuel_level = state.fuel
+    battery_level = state.battery
+    mileage_state = {'gas': GAS_MILEAGE, 'electric': ELECTRIC_MILEAGE}
+
+    access_key = (time, mileage_state, fuel_level, battery_level)
+
+    policy_val = policy_dic.get(repr(access_key), False)
+
+    if policy_val:
+        return policy_val
+
     return greedy_logic(state)
 
 # simulation function

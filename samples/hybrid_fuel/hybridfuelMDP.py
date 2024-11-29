@@ -47,6 +47,39 @@ def greedy_logic(state: VehicleState) -> VehicleAction:
     return VehicleAction(gas=gas_amount, electricity=electric_amount)
 
 
+def hmm_logic(state) -> VehicleState:
+    # Hidden Markov Model setup for mileage
+    transition_probabilities = {
+        "gas_efficient": 0.4,
+        "electric_efficient": 0.4,
+        "regenerative_braking": 0.2
+    }
+    noise_values = [-2, -1, 0, 1, 2]  # Fixed discrete noise values
+    observed_mileage = {
+        "gas_efficient": {
+            "gas": GAS_MILEAGE + random.choice(noise_values),
+            "electric": LOW_MILEAGE + random.choice(noise_values)
+        },
+        "electric_efficient": {
+            "gas": LOW_MILEAGE + random.choice(noise_values),
+            "electric": ELECTRIC_MILEAGE + random.choice(noise_values)
+        },
+        "regenerative_braking": {
+            "gas": LOW_MILEAGE + random.choice(noise_values),
+            "electric": LOW_MILEAGE + random.choice(noise_values)
+        }
+    }
+
+    # Sample a hidden state based on transition probabilities
+    hidden_state = random.choices(
+        list(transition_probabilities.keys()),
+        weights=transition_probabilities.values()
+    )[0]
+
+    mileage = observed_mileage[hidden_state]
+
+    return mileage
+
 class HybridVehicleMDP(MDP[VehicleState, str]):
     def __init__(self, max_fuel: float, max_battery: float):
         self.max_fuel = max_fuel

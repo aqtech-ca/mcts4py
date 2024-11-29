@@ -60,7 +60,7 @@ class SubMDPSolver:
                         transition_probabilities = {
                             "gas_efficient": 0.4,
                             "electric_efficient": 0.4,
-                            "mixed": 0.2
+                            "regenerative_braking": 0.2
                         }
                         noise_values = [-2, -1, 0, 1, 2]  # Fixed discrete noise values
                         observed_mileage = {
@@ -72,12 +72,11 @@ class SubMDPSolver:
                                 "gas": low_mileage + random.choice(noise_values),
                                 "electric": electric_mileage + random.choice(noise_values)
                             },
-                            "mixed": {
-                                "gas": (gas_mileage + low_mileage) / 2 + random.choice(noise_values),
-                                "electric": (electric_mileage + low_mileage) / 2 + random.choice(noise_values)
+                            "regenerative_braking": {
+                                "gas": low_mileage / random.choice(noise_values),
+                                "electric": low_mileage + random.choice(noise_values)
                             }
                         }
-
 
                         # Sample a hidden state based on transition probabilities
                         hidden_state = random.choices(
@@ -179,7 +178,7 @@ class HybridVehicleMDPSolver:
 
 # Example usage
 if __name__ == "__main__":
-    hybrid_mdp = HybridVehicleMDP(max_fuel=50, max_battery=50)
-    global_solver = HybridVehicleMDPSolver(hybrid_mdp, global_resources=50, horizon=5)
+    hybrid_mdp = HybridVehicleMDP(max_fuel=GAS_CAPACITY, max_battery=ELECTRIC_CAPACITY)
+    global_solver = HybridVehicleMDPSolver(hybrid_mdp, global_resources=GAS_CAPACITY+ELECTRIC_CAPACITY, horizon=TIME_STEPS)
     resource_allocations = global_solver.solve()
     print("Resource Allocations:", resource_allocations)
