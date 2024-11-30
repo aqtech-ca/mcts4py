@@ -96,8 +96,8 @@ if __name__ == "__main__":
     iterations_list = [1, 2, 3, 5, 10, 50, 100, 500, 1000, 1500, 2000, 2500]
     goals = [10, 20, 50, 100, 150, 200, 250, 300]
 
-    # print("running UCT")
-    # uct_results = evaluate_solver(GenericSolver, iterations_list, goals)
+    print("running UCT")
+    uct_results = evaluate_solver(GenericSolver, iterations_list, goals)
 
     print("running MENTS")
     ments_results = evaluate_solver(MentSolver, iterations_list, goals)

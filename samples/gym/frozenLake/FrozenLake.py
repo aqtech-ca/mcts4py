@@ -93,9 +93,9 @@ if __name__ == "__main__":
     # bts_results = evaluate_solver(MentSolverWithBTS, iterations_list, is_slippery=True)
     # print("done")
 
-    # print("running UCT")
-    # uct_results = evaluate_solver(GenericSolver, iterations_list, is_slippery=False, map_name=map_name)
-    # print("done")
+    print("running UCT")
+    uct_results = evaluate_solver(GenericSolver, iterations_list, is_slippery=False, map_name=map_name)
+    print("done")
 
     print("running METNS")
     ments_results = evaluate_solver(MentSolver, iterations_list, is_slippery=False, map_name=map_name)

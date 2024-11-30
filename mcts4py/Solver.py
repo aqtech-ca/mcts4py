@@ -3,7 +3,7 @@ from math import sqrt, log
 
 from mcts4py.Types import *
 from mcts4py.Nodes import *
-from tqdm import tqdm
+# from tqdm import tqdm
 from abc import ABC, abstractmethod
 import numpy as np
 import graphviz
