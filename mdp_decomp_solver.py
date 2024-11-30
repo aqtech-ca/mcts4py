@@ -56,37 +56,9 @@ class SubMDPSolver:
                         next_fuel = max(0, fuel - action.gas)
                         next_battery = max(0, min(self.max_battery, battery - action.electricity + regen_battery_inc))
 
-                        # Hidden Markov Model setup for mileage
-                        transition_probabilities = {
-                            "gas_efficient": 0.4,
-                            "electric_efficient": 0.4,
-                            "regenerative_braking": 0.2
-                        }
-                        noise_values = [-2, -1, 0, 1, 2]  # Fixed discrete noise values
-                        observed_mileage = {
-                            "gas_efficient": {
-                                "gas": gas_mileage + random.choice(noise_values),
-                                "electric": low_mileage + random.choice(noise_values)
-                            },
-                            "electric_efficient": {
-                                "gas": low_mileage + random.choice(noise_values),
-                                "electric": electric_mileage + random.choice(noise_values)
-                            },
-                            "regenerative_braking": {
-                                "gas": low_mileage / random.choice(noise_values),
-                                "electric": low_mileage + random.choice(noise_values)
-                            }
-                        }
-
-                        # Sample a hidden state based on transition probabilities
-                        hidden_state = random.choices(
-                            list(transition_probabilities.keys()),
-                            weights=transition_probabilities.values()
-                        )[0]
-
                         # Use the observed mileage for the hidden state
-                        mileage = observed_mileage[hidden_state]
-
+                        mileage = hmm_logic(state)
+                        
                         # Calculate immediate reward based on observed mileage
                         immediate_reward = (
                             mileage["gas"] * action.gas +

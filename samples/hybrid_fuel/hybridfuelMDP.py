@@ -47,28 +47,15 @@ def greedy_logic(state: VehicleState) -> VehicleAction:
     return VehicleAction(gas=gas_amount, electricity=electric_amount)
 
 
-def hmm_logic(state) -> VehicleState:
-    # Hidden Markov Model setup for mileage
-    transition_probabilities = {
-        "gas_efficient": 0.4,
-        "electric_efficient": 0.4,
-        "regenerative_braking": 0.2
-    }
-    noise_values = [-2, -1, 0, 1, 2]  # Fixed discrete noise values
-    observed_mileage = {
-        "gas_efficient": {
-            "gas": GAS_MILEAGE + random.choice(noise_values),
-            "electric": LOW_MILEAGE + random.choice(noise_values)
-        },
-        "electric_efficient": {
-            "gas": LOW_MILEAGE + random.choice(noise_values),
-            "electric": ELECTRIC_MILEAGE + random.choice(noise_values)
-        },
-        "regenerative_braking": {
-            "gas": LOW_MILEAGE + random.choice(noise_values),
-            "electric": LOW_MILEAGE + random.choice(noise_values)
-        }
-    }
+def get_mileage(state: VehicleState) -> Tuple[float, float]:
+    return OBSERVED_MILEAGE[state.scenario]
+
+def hmm_logic(state, markovian_transition_dict = MARKOVIAN_TRANS_DIC) -> VehicleState:
+    
+    if state is not None:
+        transition_probabilities = markovian_transition_dict[state.scenario]
+    else:
+        transition_probabilities = markovian_transition_dict[DEFAULT_SCENARIO]
 
     # Sample a hidden state based on transition probabilities
     hidden_state = random.choices(
@@ -76,7 +63,7 @@ def hmm_logic(state) -> VehicleState:
         weights=transition_probabilities.values()
     )[0]
 
-    mileage = observed_mileage[hidden_state]
+    mileage = OBSERVED_MILEAGE[hidden_state]
 
     return mileage
 
@@ -88,7 +75,7 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         self.gas_mileage = GAS_MILEAGE
         self.electric_mileage = ELECTRIC_MILEAGE
         self.scenario = random.choice(self.scenarios) # Randomly choose a scenario
-        self.initial_state_obj = VehicleState(fuel=self.max_fuel, battery=self.max_battery, initial_fuel=self.max_fuel, initial_battery=self.max_battery, scenario=self.scenario)
+        self.initial_state_obj = VehicleState(fuel=self.max_fuel, battery=self.max_battery, gas_mileage=self.gas_mileage, electricity_mileage=self.electric_mileage)
     
     def initial_state(self) -> VehicleState:
         return self.initial_state_obj
@@ -107,12 +94,14 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         if state.scenario == 'regenerative_braking':
             battery = min(self.max_battery, battery + REGEN_BATTERY_INC)  # Regen brake adds battery
         
-        state.scenario = random.choice(self.scenarios)  # Randomly choose a scenario
+        # state.scenario = random.choice(self.scenarios)  # Randomly choose a scenario
+        mileage = hmm_logic(state)
         
         return VehicleState(fuel=fuel, 
                             battery=battery, 
                             time_remaining = state.time_remaining - 1,
-                            scenario=state.scenario)
+                            gas_mileage=mileage["gas"],
+                            electricity_mileage=mileage["electric"])
 
     def reward(self, previous_state: Optional[VehicleState], action: Optional[str], next_state: Optional[VehicleState]) -> float:
         if not previous_state or not action:
@@ -120,6 +109,9 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         
         gas_usage = min(previous_state.fuel, action.gas)
         electric_usage = min(previous_state.battery, action.electricity)
+
+        # mileage = hmm_logic(previous_state)
+        # return mileage["gas"] * action.gas + mileage["electric"] * action.electricity
 
         if previous_state.scenario == 'gas_efficient':
             gas_mileage = GAS_MILEAGE
@@ -136,13 +128,21 @@ class HybridVehicleMDP(MDP[VehicleState, str]):
         gas_min = 0.0
         electricity_min = 0.0
 
-        if state.scenario == "regenerative_braking":
+        mileage = get_mileage(state)
+
+        if mileage["gas"] == 0.0 and mileage["electric"] == 0.0:
             available_actions = [VehicleAction(gas=0.0, electricity=0.0)]
             return available_actions
 
+        # if state.scenario == "regenerative_braking":
+        #     available_actions = [VehicleAction(gas=0.0, electricity=0.0)]
+        #     return available_actions
+
         action_greedy = greedy_logic(state)
 
-        alternative_regime = "electric_efficient" if state.scenario == "gas_efficient" else "gas_efficient"
+        # alternative_regime = "electric_efficient" if state.scenario == "gas_efficient" else "gas_efficient"
+        alternative_regime = "electric_efficient" if mileage["electric"] >= mileage["gas"] else "gas_efficient"
+
         action_alternative = greedy_logic(VehicleState(fuel=state.fuel, battery=state.battery, scenario=alternative_regime))
 
         if 0 <= state.fuel < RESOURCE_INC:
