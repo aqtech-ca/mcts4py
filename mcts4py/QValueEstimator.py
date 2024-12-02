@@ -79,13 +79,23 @@ class QValueEstimator:
         return max_q_value
     
     def update_state_value(self, state, possible_actions):
-        val_term = 0
-        for a in possible_actions:
-            q_value = self.get_q_value(state, a)
-            val_term += np.exp((1/self.alpha)*q_value)
-        new_value = self.alpha * np.log(val_term)
+        # Handle empty possible_actions
+        if not possible_actions:
+            self.state_val_dict[repr(str(state))] = float('-inf')  # Assign a very low value for empty actions
+            return float('-inf')
+
+        # Compute q_values for the given possible actions
+        q_values = [self.get_q_value(state, a) for a in possible_actions]
+
+        # Stabilize using the log-sum-exp trick
+        max_q_value = max(q_values)  # Ensure q_values is not empty
+        val_term = sum(np.exp((1/self.alpha) * (q_value - max_q_value)) for q_value in q_values)
+        new_value = self.alpha * (np.log(val_term) + (1/self.alpha) * max_q_value)
+
+        # Update state value dictionary
         self.state_val_dict[repr(str(state))] = new_value
         return new_value
+
     
     def update_q_value(self, state, action, reward, reward_to_go, discount_factor=DISCOUNT_FACTOR):
         if np.isinf(reward):
