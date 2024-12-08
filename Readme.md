@@ -22,6 +22,7 @@ python3 -m pip install --index-url https://test.pypi.org/simple/ mcts4py
 Install Requirements:
 
 `python3 -m pip install -r requirements.txt`
+`python3 -m pip install -r requirements_gym.txt`
 
 Set the Python Path:
 
