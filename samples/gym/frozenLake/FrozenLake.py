@@ -1,5 +1,5 @@
-from samples.gym.GymMentsSolver import MentSolver
-from samples.gym.GymMentsSolverWithBTS import MentSolverWithBTS
+from samples.gym.GymMentsSolver import MENTSSolverV1
+from samples.gym.GymMentsSolverWithBTS import MENTSSolverV1WithBTS
 from samples.gym.GymGenericSolver import GenericSolver
 from samples.gym.frozenLake.frozenLakeWrapper import FrozenLakeMDP
 
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     map_name = '4x4'
 
     # print("running MENTS with BTS")
-    # bts_results = evaluate_solver(MentSolverWithBTS, iterations_list, is_slippery=True)
+    # bts_results = evaluate_solver(MENTSSolverV1WithBTS, iterations_list, is_slippery=True)
     # print("done")
 
     print("running UCT")
@@ -98,5 +98,5 @@ if __name__ == "__main__":
     print("done")
 
     print("running METNS")
-    ments_results = evaluate_solver(MentSolver, iterations_list, is_slippery=False, map_name=map_name)
+    ments_results = evaluate_solver(MENTSSolverV1, iterations_list, is_slippery=False, map_name=map_name)
     print("done")

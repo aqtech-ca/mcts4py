@@ -3,7 +3,7 @@ from mcts4py.MDP import *
 from samples.gridworld.GridworldMDP import GridworldAction
 
 
-class MentSolver(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic[TState, TAction, TRandom]):
+class MENTSSolverV1(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic[TState, TAction, TRandom]):
 
     def __init__(self,
                  mdp: MDP[TState, TAction],

@@ -5,7 +5,7 @@ import math
 import numpy as np
 
 from samples.gym.GymGenericSolver import GenericSolver
-from samples.gym.GymMentsSolver import MentSolver
+from samples.gym.GymMentsSolver import MENTSSolverV1
 from samples.gym.cartPole.cartPoleWrapper import CartPoleMDP
 
 
@@ -79,7 +79,7 @@ new_state, reward, done = simulate_step(state, action)
 print(f"New State: {new_state}, Reward: {reward}, Done: {done}")
 
 
-# solver = MentSolver(
+# solver = MENTSSolverV1(
 #     mdp=env,
 #     simulation_depth_limit=100,
 #     exploration_constant=exploration_constant,

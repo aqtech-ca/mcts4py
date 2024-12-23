@@ -1,6 +1,6 @@
 from stable_baselines3 import DQN
 from samples.gym.GymGenericSolver import GenericSolver
-from samples.gym.GymMentsSolver import MentSolver
+from samples.gym.GymMentsSolver import MENTSSolverV1
 from samples.gym.cartPole.cartPoleWrapper import CartPoleMDP
 import gymnasium
 
@@ -21,7 +21,7 @@ def benchmark_baseline():
 # Benchmark MENTS Solver
 def benchmark_ments():
     env = CartPoleMDP()
-    ments_solver = MentSolver(env, simulation_depth_limit=100, exploration_constant=0.5, discount_factor=0.99)
+    ments_solver = MENTSSolverV1(env, simulation_depth_limit=100, exploration_constant=0.5, discount_factor=0.99)
     total_rewards_ments = 0
     for _ in range(100):
         done = False

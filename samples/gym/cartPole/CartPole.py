@@ -2,7 +2,7 @@ import time
 import copy
 
 from samples.gym.GymGenericSolver import GenericSolver
-from samples.gym.GymMentsSolver import MentSolver
+from samples.gym.GymMentsSolver import MENTSSolverV1
 from samples.gym.cartPole.cartPoleWrapper import CartPoleMDP
 
 
@@ -96,8 +96,11 @@ if __name__ == "__main__":
     iterations_list = [1, 2, 3, 5, 10, 50, 100, 500, 1000, 1500, 2000, 2500]
     goals = [10, 20, 50, 100, 150, 200, 250, 300]
 
+    iterations_list = [100]
+    goals = [100]
+
     print("running UCT")
     uct_results = evaluate_solver(GenericSolver, iterations_list, goals)
 
     print("running MENTS")
-    ments_results = evaluate_solver(MentSolver, iterations_list, goals)
+    ments_results = evaluate_solver(MENTSSolverV1, iterations_list, goals)

@@ -1,5 +1,5 @@
 from mcts4py.GenericSolver import GenericSolver
-from mcts4py.Ment_Solver import MentSolver
+from mcts4py.MENTSSolverV1 import MENTSSolverV1
 from samples.gridworld.GridworldMDP import *
 
 # from samples.gridworld.evaluate import *
@@ -19,7 +19,7 @@ mdp = GridworldMDP(
 print("Initial state:")
 mdp.visualize_state()
 
-solver = MentSolver(
+solver = MENTSSolverV1(
     mdp,
     simulation_depth_limit=100,
     exploration_constant=1.0,

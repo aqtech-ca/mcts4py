@@ -2,7 +2,7 @@ from mcts4py.Solver import *
 from mcts4py.MDP import *
 
 
-class MentSolverWithBTS(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic[TState, TAction, TRandom]):
+class MENTSSolverV1WithBTS(MCTSSolver[TAction, NewNode[TRandom, TAction], TRandom], Generic[TState, TAction, TRandom]):
 
     def __init__(self,
                  mdp: MDP[TState, TAction],

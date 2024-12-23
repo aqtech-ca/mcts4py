@@ -1,4 +1,4 @@
-from samples.gym.GymMentsSolver import MentSolver
+from samples.gym.GymMentsSolver import MENTSSolverV1
 from samples.gym.GymGenericSolver import GenericSolver
 from samples.gym.mountainCar.mountainCarWrapper import MountainCarWrapper
 
@@ -87,6 +87,6 @@ if __name__ == "__main__":
     print("UCT Results:", uct_results)
 
     # print("running MENTS")
-    # ments_results = evaluate_solver(MentSolver, iterations_list)
+    # ments_results = evaluate_solver(MENTSSolverV1, iterations_list)
     # print("MENTS Results:", ments_results)
 
