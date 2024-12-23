@@ -113,7 +113,7 @@ class ActionNode(Generic[TState, TAction], Node[TAction]):
 
     @property
     def state(self) -> TState:
-        if self.__state == None:
+        if self.__state is None:
             raise RuntimeError(f"Simulation not run at depth: {self.depth}")
         return self.__state
 
@@ -123,7 +123,7 @@ class ActionNode(Generic[TState, TAction], Node[TAction]):
 
     @property
     def valid_actions(self) -> list[TAction]:
-        if self.__valid_actions == None:
+        if self.__valid_actions is None:
             raise RuntimeError(f"Simulation not run")
         return self.__valid_actions
 
@@ -293,3 +293,31 @@ class DecisionNode(Generic[TAction, TRandom], NewNode[TAction, TRandom]):
 
     def __str__(self):
         return f'Inducing: {self.inducing_action}, State: {self.state}'
+
+
+class SoftmaxActionNode((ActionNode[TState, TAction])):
+    def __init__(self, parent=None, inducing_action=None, valid_actions=None):
+        super().__init__(parent, inducing_action)
+        if valid_actions is None:
+            valid_actions = []
+        self.Q_stf = {}  # Dictionary to store Q_stf(s, a) for each action a
+        self.N_sa = {}  # Dictionary to store N(s, a) for each action a
+        self.valid_actions = valid_actions if valid_actions is not None else []
+        self.n = 0
+
+        for action in self.valid_actions:
+            self.Q_stf[action] = 0.0
+            self.N_sa[action] = 0
+
+
+# Softmax Node
+def calculate_lambda_s(node, epsilon):
+    num_actions = len(node.valid_actions)
+    n = node.n
+    if n > 0:
+        lambda_s = epsilon * num_actions / math.log(n + 1)
+    else:
+        # when N_s is zero
+        lambda_s = epsilon * num_actions
+    return lambda_s
+
